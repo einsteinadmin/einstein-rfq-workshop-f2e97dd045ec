@@ -314,7 +314,8 @@
     <div class="pane-head">
       <h2>Email preview</h2>
       <div class="tabs" id="viewTabs">
-        <button class="tab active" data-view="proposed">Proposed (KP draft)</button>
+        <button class="tab" data-view="final">★ Final email <span id="finalCount" style="font-size:10px;color:var(--good);font-weight:700;margin-left:2px"></span></button>
+        <button class="tab active" data-view="proposed">Editorial (markers on)</button>
         <button class="tab" data-view="current">Current (live)</button>
         <button class="tab" data-view="sxs">Side-by-side</button>
       </div>
@@ -407,6 +408,14 @@
 
           </div>
         </div>
+      </div>
+
+      <!-- FINAL VIEW: clean render w/ only approved changes -->
+      <div id="view-final" class="email-wrap hide">
+        <div style="max-width:600px;margin:0 auto 12px;font-size:12px;color:var(--ink-soft);text-align:center">
+          <b>★ Final email</b> — what the customer will see, with all approved changes applied. No editorial markers. Updates live as you approve / reject in the right pane.
+        </div>
+        <div class="email" id="emailFinal"></div>
       </div>
 
       <!-- CURRENT VIEW -->
@@ -842,26 +851,27 @@ const SUGGESTIONS = [
   {
     id: 's10-strangers',
     title: '"Strangers touching your stuff" Meet Your Movers line',
-    why: 'Names the real underlying anxiety in the customer\'s own language, then defuses it. THE line — customers screenshot it. More punch than the soft Meet Your Movers tease in card #5.',
+    why: 'Names the real underlying anxiety in the customer\'s own language, then defuses it. THE line — customers screenshot it. Lands right after the trust block, before the "ready to lock it in" CTA.',
     variants: [
       {
         id:'a', label:'Original phrasing (callout block)',
         copy:'A few days before your move, you\'ll get a "Meet Your Movers" email so you know exactly who\'s coming. No strangers touching your stuff.',
         apply:(root,copy)=>{
-          const sign = root.querySelector('[data-anchor="signoff"]');
-          if(!sign) return;
+          // Place between trust block and CTA
+          const cta = root.querySelector('.cta');
+          if(!cta) return;
           const block = mkInj(`<div class="strangers-block">👋 ${escapeHtml(copy)}</div>`);
-          sign.parentNode.insertBefore(block, sign);
+          cta.parentNode.insertBefore(block, cta);
         }
       },
       {
         id:'b', label:'Inline italic (less visual weight)',
-        copy:'P.S. — A few days before your move you\'ll get a Meet Your Movers email so you know exactly who\'s pulling up. No strangers touching your stuff.',
+        copy:'A few days before your move you\'ll get a Meet Your Movers email so you know exactly who\'s pulling up. No strangers touching your stuff.',
         apply:(root,copy)=>{
-          const sign = root.querySelector('[data-anchor="signoff"]');
-          if(!sign) return;
-          const block = mkInj(`<p style="font-size:14px;font-style:italic;color:var(--ink-soft);margin:10px 0">${escapeHtml(copy)}</p>`);
-          sign.parentNode.insertBefore(block, sign);
+          const cta = root.querySelector('.cta');
+          if(!cta) return;
+          const block = mkInj(`<p style="font-size:14px;font-style:italic;color:var(--ink-soft);margin:14px 0">${escapeHtml(copy)}</p>`);
+          cta.parentNode.insertBefore(block, cta);
         }
       }
     ]
@@ -908,22 +918,33 @@ const SUGGESTIONS = [
   },
   {
     id: 's12-protip',
-    title: '"Box up the small stuff" pro tip — practical voice add',
-    why: 'Genuine advice that also reduces our cost (faster moves = happier movers + better margin). "Garden tools" specificity adds voice. New email has zero pro tip — pure value-add stripped.',
+    title: '"Biggest factor in estimate accuracy" — fine print inside quote box',
+    why: 'Sits inside the Quote Summary box as the closing note, REPLACING the "That\'s the all-in price..." line. Doubles as estimate-accuracy disclaimer + cost-saving advice for the prepared customer.',
     variants: [
       {
-        id:'a', label:'Full pro tip (with garden tools)',
-        copy:'Biggest factor in move time? How prepared you are. Small miscellaneous stuff (hanging clothes, lamps, garden tools, etc.) takes the most time — boxing it up or moving it yourself can save a real chunk of money.',
+        id:'a', label:'Estimate-accuracy framing (full)',
+        copy:'Biggest factor in estimate accuracy? How prepared you are. Small miscellaneous stuff (hanging clothes, lamps, garden tools, etc.) takes the most time — boxing it up or moving it yourself can save a real chunk of money.',
         apply:(root,copy)=>{
-          const cta = root.querySelector('.cta');
-          if(!cta) return;
-          const block = mkInj(`<div class="pro-tip"><span class="label">💡 Pro tip to save time + $</span>${escapeHtml(copy)}</div>`);
-          cta.parentNode.insertBefore(block, cta);
+          // Replace the .qnote inside .qbox
+          const note = root.querySelector('.qbox .qnote');
+          if(!note) return;
+          note.classList.add('x-injected');
+          note.innerHTML = `<span style="font-weight:600;color:#7a5519">💡 </span>${escapeHtml(copy)}`;
         }
       },
       {
-        id:'b', label:'Shorter version',
-        copy:'Want to save money? The biggest time-eater on moving day is the small stuff (clothes, lamps, knick-knacks). Box it up or move it yourself and you\'ll knock real hours off.',
+        id:'b', label:'Shorter (same spot)',
+        copy:'Biggest factor in estimate accuracy? How prepared you are. Small stuff (clothes, lamps, knick-knacks) eats the most time — box it up or move it yourself to keep the bill tight.',
+        apply:(root,copy)=>{
+          const note = root.querySelector('.qbox .qnote');
+          if(!note) return;
+          note.classList.add('x-injected');
+          note.innerHTML = `<span style="font-weight:600;color:#7a5519">💡 </span>${escapeHtml(copy)}`;
+        }
+      },
+      {
+        id:'c', label:'(Old) Standalone callout above CTA',
+        copy:'Biggest factor in move time? How prepared you are. Small miscellaneous stuff (hanging clothes, lamps, garden tools, etc.) takes the most time — boxing it up or moving it yourself can save a real chunk of money.',
         apply:(root,copy)=>{
           const cta = root.querySelector('.cta');
           if(!cta) return;
@@ -1041,38 +1062,52 @@ SUGGESTIONS.forEach(s => {
 /* ---------- Email re-render (apply approvals + previews) ---------- */
 let BASELINE_HTML = null;
 
-function renderEmail(){
-  const el = document.getElementById('emailProposed');
-  if(!el) return;
-  if(BASELINE_HTML === null){ BASELINE_HTML = el.innerHTML; }
-  el.innerHTML = BASELINE_HTML;
-
-  // Apply approved first (stable order), then previewing on top
-  const applyOne = (s, st, mode) => {
-    const variant = s.variants.find(v => v.id === st.selectedVariant) || s.variants[0];
-    const copy = (st.selectedVariant === 'custom' && st.customCopy) ? st.customCopy : variant.copy;
-    try {
-      variant.apply(el, copy);
-    } catch(e){ console.warn('apply failed', s.id, e); }
-    // Mark injected elements
-    const injected = el.querySelectorAll('.x-injected:not([data-marked])');
-    injected.forEach(node => {
-      node.dataset.marked = '1';
+function applyToTarget(rootEl, s, st, mode, withMarkers){
+  const variant = s.variants.find(v => v.id === st.selectedVariant) || s.variants[0];
+  const copy = (st.selectedVariant === 'custom' && st.customCopy) ? st.customCopy : variant.copy;
+  try {
+    variant.apply(rootEl, copy);
+  } catch(e){ console.warn('apply failed', s.id, e); }
+  const injected = rootEl.querySelectorAll('.x-injected:not([data-marked])');
+  injected.forEach(node => {
+    node.dataset.marked = '1';
+    if(withMarkers){
       if(mode === 'approved') node.classList.add('approved');
       else if(mode === 'preview') node.classList.add('preview-on');
-    });
-  };
+    }
+  });
+}
 
+function renderEmail(){
+  const editorial = document.getElementById('emailProposed');
+  const finalEl = document.getElementById('emailFinal');
+  if(!editorial) return;
+  if(BASELINE_HTML === null){ BASELINE_HTML = editorial.innerHTML; }
+
+  // Editorial preview (markers ON, includes previews)
+  editorial.innerHTML = BASELINE_HTML;
   SUGGESTIONS.forEach(s => {
     const st = state.suggestions[s.id];
-    if(!st) return;
-    if(st.status === 'approved') applyOne(s, st, 'approved');
+    if(st && st.status === 'approved') applyToTarget(editorial, s, st, 'approved', true);
   });
   SUGGESTIONS.forEach(s => {
     const st = state.suggestions[s.id];
-    if(!st) return;
-    if(st.previewing && st.status !== 'approved') applyOne(s, st, 'preview');
+    if(st && st.previewing && st.status !== 'approved') applyToTarget(editorial, s, st, 'preview', true);
   });
+
+  // Final email (markers OFF, ONLY approved — what the customer sees)
+  if(finalEl){
+    finalEl.innerHTML = BASELINE_HTML;
+    SUGGESTIONS.forEach(s => {
+      const st = state.suggestions[s.id];
+      if(st && st.status === 'approved') applyToTarget(finalEl, s, st, 'approved', false);
+    });
+  }
+
+  // Update the small counter on the Final tab
+  const approvedCount = SUGGESTIONS.filter(s => state.suggestions[s.id]?.status === 'approved').length;
+  const tag = document.getElementById('finalCount');
+  if(tag) tag.textContent = approvedCount > 0 ? `(${approvedCount} applied)` : '';
 }
 
 /* ---------- Render: suggestions ---------- */
@@ -1261,8 +1296,9 @@ document.getElementById('viewTabs').addEventListener('click', e => {
 function switchView(v){
   state.view = v;
   document.querySelectorAll('#viewTabs .tab').forEach(b => b.classList.toggle('active', b.dataset.view===v));
-  ['proposed','current','sxs'].forEach(name => {
-    document.getElementById('view-'+name).classList.toggle('hide', name!==v);
+  ['proposed','current','sxs','final'].forEach(name => {
+    const el = document.getElementById('view-'+name);
+    if(el) el.classList.toggle('hide', name!==v);
   });
   save();
 }
@@ -1313,10 +1349,15 @@ function escapeHtml(s){
 
 /* ---------- Boot ---------- */
 load();
-// Snapshot baseline AFTER initial render, BEFORE applying suggestions
 setTimeout(() => {
-  switchView(state.view || 'proposed');
-  renderSug(); // also calls renderEmail which captures baseline
+  // Smart default: if any approvals exist, default to Final view; else Editorial
+  let defaultView = state.view;
+  if(!defaultView){
+    const hasApprovals = SUGGESTIONS.some(s => state.suggestions[s.id]?.status === 'approved');
+    defaultView = hasApprovals ? 'final' : 'proposed';
+  }
+  switchView(defaultView);
+  renderSug(); // also calls renderEmail which captures baseline + populates both targets
 }, 0);
 </script>
 
