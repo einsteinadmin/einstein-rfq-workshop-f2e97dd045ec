@@ -292,6 +292,27 @@
     border-radius:4px 4px 0 0;
   }
   .subject-bar b{color:var(--ink);font-weight:600;margin-right:6px}
+
+  /* StoryBrand audit batch elements */
+  .sb-tagline{text-align:center;font-size:15px;color:var(--orange);font-style:italic;font-weight:500;margin:-4px 0 14px;letter-spacing:.01em}
+  .sb-system-tag{text-align:center;font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.18em;font-weight:600;margin:-8px 0 16px}
+  .sb-empathy{
+    background:linear-gradient(180deg,#FFFBF4 0%,#fff 100%);
+    border:1px solid #f1d2a8;border-left:4px solid var(--orange);
+    border-radius:6px;padding:14px 16px;margin:14px 0;font-size:16px;line-height:1.55;color:var(--ink);
+  }
+  .sb-empathy b{color:var(--orange)}
+  .sb-plan{
+    background:#FAFBFC;border:1px solid var(--line);border-radius:6px;padding:12px 14px;margin:10px 0;
+  }
+  .sb-plan .label{font-size:12px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;display:block}
+  .sb-plan ol{margin:0;padding-left:22px}
+  .sb-plan li{font-size:15px;line-height:1.5;margin:4px 0}
+  .sb-success{
+    background:#27343D;color:#fff;padding:14px 18px;border-radius:8px;margin:14px 0;
+    font-size:16px;line-height:1.5;text-align:center;font-weight:500;
+  }
+  .sb-success em{color:var(--orange);font-style:normal;font-weight:600}
 </style>
 </head>
 <body>
@@ -529,7 +550,7 @@
   <!-- RIGHT: Suggestions -->
   <section class="pane" id="sugPane">
     <div class="pane-head">
-      <h2>Suggestions (15) <span style="font-weight:400;color:var(--ink-soft);font-size:11px;text-transform:none">· pick variant → preview → approve</span></h2>
+      <h2>Suggestions (22) <span style="font-weight:400;color:var(--ink-soft);font-size:11px;text-transform:none">· 15 original + 7 StoryBrand audit</span></h2>
       <span class="meta" id="sugSummary">0 approved · 0 rejected · 8 pending</span>
     </div>
     <div id="sugList"></div>
@@ -1011,6 +1032,291 @@ const SUGGESTIONS = [
           if(!pair) return;
           const line = mkInj(`<p class="competitive-coverage">${escapeHtml(copy)}</p>`);
           pair.parentNode.insertBefore(line, pair.nextSibling);
+        }
+      }
+    ]
+  },
+  /* ---------- StoryBrand audit batch (5/26) — grounded in Cameron's Brand Story doc + Story Brand Outline ---------- */
+  {
+    id: 'sb1-tagline',
+    title: 'SB1 · "Moving doesn\'t have to suck" tagline under logo',
+    why: 'Your headline tagline from the Brand Story doc. Currently invisible in the email. Lands as a single italic line under the logo (and below the Best of Austin trophy chip if approved).',
+    variants: [
+      {
+        id:'a', label:'Original tagline (verbatim brand doc)',
+        copy:'Moving doesn\'t have to suck.',
+        apply:(root,copy)=>{
+          const logo = root.querySelector('img.logo');
+          if(!logo) return;
+          // Insert after trophy chip if it exists, otherwise after logo
+          const trophy = root.querySelector('.best-of-chip');
+          const ref = trophy || logo;
+          const line = mkInj(`<div class="sb-tagline">${escapeHtml(copy)}</div>`);
+          ref.parentNode.insertBefore(line, ref.nextSibling);
+        }
+      },
+      {
+        id:'b', label:'Tightened — adds promise',
+        copy:'Moving doesn\'t have to suck. We make sure of it.',
+        apply:(root,copy)=>{
+          const logo = root.querySelector('img.logo');
+          if(!logo) return;
+          const trophy = root.querySelector('.best-of-chip');
+          const ref = trophy || logo;
+          const line = mkInj(`<div class="sb-tagline">${escapeHtml(copy)}</div>`);
+          ref.parentNode.insertBefore(line, ref.nextSibling);
+        }
+      },
+      {
+        id:'c', label:'Smart Move System reframe',
+        copy:'Moving doesn\'t have to suck — that\'s why we built the Smart Move System.',
+        apply:(root,copy)=>{
+          const logo = root.querySelector('img.logo');
+          if(!logo) return;
+          const trophy = root.querySelector('.best-of-chip');
+          const ref = trophy || logo;
+          const line = mkInj(`<div class="sb-tagline">${escapeHtml(copy)}</div>`);
+          ref.parentNode.insertBefore(line, ref.nextSibling);
+        }
+      }
+    ]
+  },
+  {
+    id: 'sb2-empathy',
+    title: 'SB2 · "Your stuff isn\'t just stuff" empathy block (lifted from brand voice)',
+    why: 'StoryBrand "guide" tenet: lead with empathy, then authority. Currently the email never explicitly says "we get it." This block lifts the empathy peak directly from your Story Brand Outline.',
+    variants: [
+      {
+        id:'a', label:'Verbatim brand voice (full)',
+        copy:'Moving usually sucks. It\'s stressful, chaotic, and often full of shady movers who overcharge, break your stuff, or worse. And let\'s face it — your stuff isn\'t just stuff. It\'s your life, your memories, your hard work. We get it.',
+        apply:(root,copy)=>{
+          const video = root.querySelector('.video');
+          if(!video) return;
+          const block = mkInj(`<div class="sb-empathy">${escapeHtml(copy)}</div>`);
+          video.parentNode.insertBefore(block, video);
+        }
+      },
+      {
+        id:'b', label:'Tighter (key line only)',
+        copy:'Your stuff isn\'t just stuff — it\'s your life, your memories, your hard work. We get it.',
+        apply:(root,copy)=>{
+          const video = root.querySelector('.video');
+          if(!video) return;
+          const block = mkInj(`<div class="sb-empathy"><b>${escapeHtml(copy)}</b></div>`);
+          video.parentNode.insertBefore(block, video);
+        }
+      },
+      {
+        id:'c', label:'Name the villain (Chaos of Moving)',
+        copy:'Moving day is chaos by default — the broken stuff, the late movers, the strangers in your house, the fees you didn\'t see coming. We exist to fight that chaos for you.',
+        apply:(root,copy)=>{
+          const video = root.querySelector('.video');
+          if(!video) return;
+          const block = mkInj(`<div class="sb-empathy">${escapeHtml(copy)}</div>`);
+          video.parentNode.insertBefore(block, video);
+        }
+      }
+    ]
+  },
+  {
+    id: 'sb3-smart-move-brand',
+    title: 'SB3 · Make the Smart Move System visible (placement choice)',
+    why: 'Smart Move System is your branded plan with 5 named pillars. Currently invisible in the email — the included grid, trust block, etc. are unbranded. Pick where it shows up.',
+    variants: [
+      {
+        id:'a', label:'Brand line under logo / tagline',
+        copy:'THE SMART MOVE SYSTEM™',
+        apply:(root,copy)=>{
+          const logo = root.querySelector('img.logo');
+          if(!logo) return;
+          // Insert after trophy + tagline if those exist
+          const tagline = root.querySelector('.sb-tagline');
+          const trophy = root.querySelector('.best-of-chip');
+          const ref = tagline || trophy || logo;
+          const line = mkInj(`<div class="sb-system-tag">${escapeHtml(copy)}</div>`);
+          ref.parentNode.insertBefore(line, ref.nextSibling);
+        }
+      },
+      {
+        id:'b', label:'In signoff (smarter integration)',
+        copy:'Powered by the Smart Move System™',
+        apply:(root,copy)=>{
+          const sign = root.querySelector('[data-anchor="signoff"]');
+          if(!sign) return;
+          const line = mkInj(`<p class="small" style="font-size:12px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.12em;font-weight:600;margin-top:6px;text-align:right">${escapeHtml(copy)}</p>`);
+          sign.parentNode.insertBefore(line, sign.nextSibling);
+        }
+      },
+      {
+        id:'c', label:'Pillar tags on existing sections',
+        copy:'(applies pillar labels: Smart Pricing on included grid, Smart Results on trust block, Smart Scheduling on CTA)',
+        apply:(root,copy)=>{
+          // Tag the "What\'s included" h4
+          const inc = root.querySelector('.pair .col.good h4');
+          if(inc){ inc.classList.add('x-injected'); inc.innerHTML = '✅ Smart Pricing — what\'s included:'; }
+          // Tag the "What you won\'t see" h4
+          const wont = root.querySelector('.pair .col.bad h4');
+          if(wont){ wont.classList.add('x-injected'); wont.innerHTML = '🚫 Smart Pricing — what you won\'t see:'; }
+          // Tag the trust heading
+          const trust = root.querySelector('[data-anchor="trust-heading"]');
+          if(trust){ trust.classList.add('x-injected'); trust.innerHTML = 'Smart Results — why people trust us with their stuff:'; }
+        }
+      }
+    ]
+  },
+  {
+    id: 'sb4-hero-trust',
+    title: 'SB4 · Hero-reframe the trust block heading (customer is the hero, not us)',
+    why: 'Current heading "Why people trust us with their stuff" puts US as the hero. StoryBrand flips this — customer is the hero. Reframe to lead with the customer\'s achievement / company they\'re joining.',
+    variants: [
+      {
+        id:'a', label:'Hero / company-they-join framing',
+        copy:'Join 100,000+ families who\'ve made the smart move:',
+        apply:(root,copy)=>{
+          const h = root.querySelector('[data-anchor="trust-heading"]');
+          if(!h) return;
+          h.classList.add('x-injected');
+          h.innerHTML = escapeHtml(copy);
+        }
+      },
+      {
+        id:'b', label:'Transformation framing (frazzled → fresh start)',
+        copy:'100,000+ moves later — frazzled traded for fresh start:',
+        apply:(root,copy)=>{
+          const h = root.querySelector('[data-anchor="trust-heading"]');
+          if(!h) return;
+          h.classList.add('x-injected');
+          h.innerHTML = escapeHtml(copy);
+        }
+      },
+      {
+        id:'c', label:'Plain confidence (customer-trusted)',
+        copy:'Trusted by 100,000+ families to get moving day right:',
+        apply:(root,copy)=>{
+          const h = root.querySelector('[data-anchor="trust-heading"]');
+          if(!h) return;
+          h.classList.add('x-injected');
+          h.innerHTML = escapeHtml(copy);
+        }
+      }
+    ]
+  },
+  {
+    id: 'sb5-smart-cta',
+    title: 'SB5 · Direct CTA verb — "Make the smart move"',
+    why: 'Current CTA "Ready to lock it in?" is generic. Your brand-implementation doc explicitly uses "Make the smart move" as the action verb. Lift it.',
+    variants: [
+      {
+        id:'a', label:'Brand-voice direct',
+        copy:'🚀 Ready to make the smart move?',
+        apply:(root,copy)=>{
+          const h = root.querySelector('.cta h3');
+          if(!h) return;
+          h.classList.add('x-injected');
+          h.innerHTML = escapeHtml(copy);
+        }
+      },
+      {
+        id:'b', label:'Tighter (arrow CTA)',
+        copy:'🚀 Make the smart move →',
+        apply:(root,copy)=>{
+          const h = root.querySelector('.cta h3');
+          if(!h) return;
+          h.classList.add('x-injected');
+          h.innerHTML = escapeHtml(copy);
+        }
+      },
+      {
+        id:'c', label:'Tagline-led',
+        copy:'🚀 Let\'s lock in your date and make moving suck less.',
+        apply:(root,copy)=>{
+          const h = root.querySelector('.cta h3');
+          if(!h) return;
+          h.classList.add('x-injected');
+          h.innerHTML = escapeHtml(copy);
+        }
+      }
+    ]
+  },
+  {
+    id: 'sb6-plan',
+    title: 'SB6 · "Here\'s how this works" 3-step plan',
+    why: 'StoryBrand "plan" tenet: customers need a clear mental model of what happens next. The reply list is the first step but not framed as a journey. A 3-step plan reduces the friction of "what comes after I reply?"',
+    variants: [
+      {
+        id:'a', label:'3 steps — Reply / Confirm / Show up',
+        copy:'1. Reply with the details below.\n2. We send your confirmation (your date is locked).\n3. We show up on time and make moving day easy.',
+        apply:(root,copy)=>{
+          const cta = root.querySelector('.cta');
+          if(!cta) return;
+          const h = cta.querySelector('h3');
+          if(!h) return;
+          const lis = copy.split('\n').map(l => `<li>${escapeHtml(l.replace(/^\d+\.\s*/,''))}</li>`).join('');
+          const block = mkInj(`<div class="sb-plan"><span class="label">Here\'s how this works:</span><ol>${lis}</ol></div>`);
+          cta.insertBefore(block, h.nextSibling);
+        }
+      },
+      {
+        id:'b', label:'Smart Move System framing',
+        copy:'1. Reply with the details below.\n2. Smart Scheduling locks in your date and routes the right crew.\n3. A few days before, we send your Meet Your Mover email — no strangers, ever.\n4. We show up on time (or your move is discounted).',
+        apply:(root,copy)=>{
+          const cta = root.querySelector('.cta');
+          if(!cta) return;
+          const h = cta.querySelector('h3');
+          if(!h) return;
+          const lis = copy.split('\n').map(l => `<li>${escapeHtml(l.replace(/^\d+\.\s*/,''))}</li>`).join('');
+          const block = mkInj(`<div class="sb-plan"><span class="label">Here\'s the Smart Move plan:</span><ol>${lis}</ol></div>`);
+          cta.insertBefore(block, h.nextSibling);
+        }
+      },
+      {
+        id:'c', label:'Minimal / casual',
+        copy:'1. Tell us what to know.\n2. We confirm.\n3. We make Saturday easy.',
+        apply:(root,copy)=>{
+          const cta = root.querySelector('.cta');
+          if(!cta) return;
+          const h = cta.querySelector('h3');
+          if(!h) return;
+          const lis = copy.split('\n').map(l => `<li>${escapeHtml(l.replace(/^\d+\.\s*/,''))}</li>`).join('');
+          const block = mkInj(`<div class="sb-plan"><span class="label">Here\'s the plan:</span><ol>${lis}</ol></div>`);
+          cta.insertBefore(block, h.nextSibling);
+        }
+      }
+    ]
+  },
+  {
+    id: 'sb7-success',
+    title: 'SB7 · Success-vision close (paint life after the move)',
+    why: 'StoryBrand "success" tenet: people buy resolutions, not transactions. The email currently ends at "your date is locked." Add the picture of life after the move — that\'s what customers are actually buying.',
+    variants: [
+      {
+        id:'a', label:'Transformation language (frazzled → fresh start)',
+        copy:'By Saturday night, you\'ll be eating takeout in your new living room — frazzled traded for fresh start.',
+        apply:(root,copy)=>{
+          const sign = root.querySelector('[data-anchor="signoff"]');
+          if(!sign) return;
+          const block = mkInj(`<div class="sb-success">${escapeHtml(copy)}</div>`);
+          sign.parentNode.insertBefore(block, sign);
+        }
+      },
+      {
+        id:'b', label:'Teleportation metaphor (from brand doc)',
+        copy:'Honestly? We\'d teleport your stuff if we could. This is the closest we can get — and it\'s pretty close.',
+        apply:(root,copy)=>{
+          const sign = root.querySelector('[data-anchor="signoff"]');
+          if(!sign) return;
+          const block = mkInj(`<div class="sb-success">${escapeHtml(copy)}</div>`);
+          sign.parentNode.insertBefore(block, sign);
+        }
+      },
+      {
+        id:'c', label:'Tagline-style close',
+        copy:'Start your new chapter on the right foot. That\'s the smart move.',
+        apply:(root,copy)=>{
+          const sign = root.querySelector('[data-anchor="signoff"]');
+          if(!sign) return;
+          const block = mkInj(`<div class="sb-success"><em>${escapeHtml(copy)}</em></div>`);
+          sign.parentNode.insertBefore(block, sign);
         }
       }
     ]
