@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Internal Tool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="widget.css">
+<style>
+  :root{
+    --orange:#EF8B22;
+    --orange-soft:#FFF4E8;
+    --ink:#27343D;
+    --ink-soft:#5C6873;
+    --line:#E5E7EB;
+    --line-soft:#F1F3F5;
+    --bg:#F7F8FA;
+    --good:#1F9D55;
+    --good-bg:#E8F5EE;
+    --bad:#C53030;
+    --bad-bg:#FBEAEA;
+    --info:#0979C3;
+    --info-bg:#E8F2FA;
+    --warn:#9C6A0B;
+    --warn-bg:#FFF7E0;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);font-family:'Roboto',-apple-system,system-ui,sans-serif;color:var(--ink)}
+  a{color:var(--info);text-decoration:none}
+  a:hover{text-decoration:underline}
+
+  /* ---------- Top bar ---------- */
+  header.bar{
+    background:#fff;border-bottom:1px solid var(--line);
+    padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;
+    position:sticky;top:0;z-index:50;
+  }
+  header.bar h1{margin:0;font-size:16px;font-weight:700;letter-spacing:-.01em}
+  header.bar .meta{font-size:12px;color:var(--ink-soft)}
+  header.bar .actions{display:flex;gap:8px;align-items:center}
+  .btn{
+    font:inherit;font-size:13px;font-weight:500;padding:8px 14px;border-radius:6px;
+    border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;line-height:1;
+  }
+  .btn:hover{background:var(--line-soft)}
+  .btn.primary{background:var(--info);color:#fff;border-color:var(--info)}
+  .btn.primary:hover{background:#076ba8}
+  .btn.ghost{background:transparent;border-color:transparent;color:var(--ink-soft)}
+  .btn.ghost:hover{color:var(--ink);background:var(--line-soft)}
+
+  /* ---------- Layout ---------- */
+  main{
+    display:grid;grid-template-columns:1fr 420px;gap:20px;
+    padding:20px 24px;align-items:start;
+  }
+  @media (max-width:1100px){ main{grid-template-columns:1fr} }
+
+  .pane{background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  /* Left pane (email preview) stays in view as suggestions scroll on the right */
+  main > section.pane:first-child{
+    position:sticky;
+    top:70px; /* below sticky header */
+    max-height:calc(100vh - 90px);
+    display:flex;flex-direction:column;
+  }
+  main > section.pane:first-child .pane-body{
+    overflow-y:auto;
+    flex:1;
+  }
+  @media (max-width:1100px){
+    main > section.pane:first-child{position:static;max-height:none}
+    main > section.pane:first-child .pane-body{overflow:visible}
+  }
+  .pane-head{
+    padding:12px 16px;border-bottom:1px solid var(--line);
+    display:flex;align-items:center;justify-content:space-between;background:#FAFBFC;
+  }
+  .pane-head h2{margin:0;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft)}
+  .pane-head .tabs{display:flex;gap:4px}
+  .tab{
+    font-size:12px;padding:5px 10px;border-radius:4px;cursor:pointer;color:var(--ink-soft);
+    border:1px solid transparent;font-weight:500;background:transparent;
+  }
+  .tab.active{background:#fff;border-color:var(--line);color:var(--ink)}
+  .pane-body{padding:0}
+
+  /* ---------- Email preview ---------- */
+  .email-wrap{background:#ECEEF1;padding:24px}
+  .email{
+    max-width:600px;margin:0 auto;background:#fff;border-radius:4px;
+    box-shadow:0 1px 3px rgba(0,0,0,.06);
+    font-family:'Roboto',sans-serif;color:#27343D;
+  }
+  .email-pad{padding:24px}
+  .email .logo{display:block;margin:8px auto 16px;width:150px}
+  .email .hr{border:0;border-top:1px solid #d9dde2;margin:18px 0}
+  .email h2.section{font-size:23px;font-weight:900;line-height:1.2;margin:14px 0 10px}
+  .email p, .email li{font-size:16px;line-height:1.55;margin:10px 0}
+  .email .small{font-size:13px;color:var(--ink-soft)}
+  .email .toc-row{font-size:18px;margin:8px 0}
+  .email ol, .email ul{padding-left:22px;margin:8px 0}
+  .email .video{
+    background:#1f262d;border-radius:8px;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;
+    color:#fff;font-size:14px;margin:12px 0;position:relative;cursor:pointer;
+    background-image:linear-gradient(135deg,#2a333d,#1f262d);
+  }
+  .email .video .play{
+    width:54px;height:54px;border-radius:50%;background:var(--orange);display:flex;align-items:center;justify-content:center;
+    color:#fff;font-size:20px;font-weight:700;
+  }
+  .email .video-cap{text-align:center;font-size:13px;color:var(--ink-soft);margin-top:6px}
+
+  /* Quote summary box */
+  .qbox{border:2px solid var(--orange);background:var(--orange-soft);border-radius:8px;padding:16px;margin:14px 0}
+  .qbox .qhead{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--orange);margin-bottom:10px}
+  .qbox .qrow{display:flex;justify-content:space-between;font-size:16px;padding:4px 0;border-bottom:1px dashed #f1d2a8}
+  .qbox .qrow:last-of-type{border:0}
+  .qbox .qtotal{font-size:20px;font-weight:900;margin-top:10px;padding-top:10px;border-top:2px solid var(--orange);display:flex;justify-content:space-between}
+  .qbox .qnote{font-size:13px;color:#7a5519;margin-top:8px;font-style:italic}
+
+  /* Included vs not */
+  .pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+  @media (max-width:520px){.pair{grid-template-columns:1fr}}
+  .pair .col{border-radius:8px;padding:12px;font-size:14px}
+  .pair .col.good{background:var(--good-bg);border:1px solid #cfe9d8}
+  .pair .col.bad{background:var(--bad-bg);border:1px solid #f1c9c9}
+  .pair .col h4{margin:0 0 8px;font-size:13px}
+  .pair .col ul{list-style:none;padding:0;margin:0}
+  .pair .col li{margin:4px 0;font-size:14px;line-height:1.4}
+  .savings{background:var(--orange);color:#fff;text-align:center;padding:10px;border-radius:6px;margin-top:10px;font-weight:700;font-size:15px}
+
+  /* Trust block */
+  .trust{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;background:#FAFBFC;border:1px solid var(--line);border-radius:8px;padding:12px;margin:14px 0}
+  .trust .item{font-size:14px;display:flex;gap:8px;align-items:center}
+  .trust .item .ico{font-size:18px}
+
+  /* CTA */
+  .cta{background:var(--info-bg);border-left:4px solid var(--info);padding:12px 14px;border-radius:6px;margin:14px 0}
+  .cta h3{margin:0 0 6px;font-size:16px}
+
+  /* Editable hints */
+  [data-edit]{outline:1px dashed transparent;border-radius:3px;transition:outline-color .15s, background .15s}
+  body.editing [data-edit]{outline-color:#cfd4da}
+  body.editing [data-edit]:hover{outline-color:var(--orange);background:#FFFBF4}
+  [data-edit]:focus{outline:2px solid var(--orange) !important;background:#FFFBF4;}
+
+  /* Section anchor highlight (for suggestion focus) */
+  .focused{animation:pulse 1.6s ease-out 1}
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(239,139,34,.55)}
+    50%{box-shadow:0 0 0 10px rgba(239,139,34,0)}
+    100%{box-shadow:0 0 0 0 rgba(239,139,34,0)}
+  }
+
+  /* ---------- Suggestions pane ---------- */
+  .sug{padding:14px 16px;border-bottom:1px solid var(--line)}
+  .sug:last-child{border-bottom:0}
+  .sug-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+  .sug-title{font-size:14px;font-weight:700;line-height:1.3;margin:0;flex:1}
+  .sug-num{font-size:11px;color:var(--ink-soft);font-weight:500;background:var(--line-soft);padding:2px 6px;border-radius:10px;white-space:nowrap}
+  .sug-why{font-size:13px;color:var(--ink-soft);margin:6px 0 8px;line-height:1.45}
+  .sug-anchor{font-size:11px;color:var(--info);cursor:pointer;text-transform:uppercase;letter-spacing:.04em;font-weight:600;background:transparent;border:0;padding:0;margin-bottom:8px}
+  .sug-anchor:hover{text-decoration:underline}
+  .sug-copy{
+    background:#FAFBFC;border:1px solid var(--line);border-radius:6px;padding:10px;font-size:13px;line-height:1.5;
+    white-space:pre-wrap;font-family:Menlo,Monaco,monospace;color:#2c3a47;margin:6px 0 10px;
+  }
+  .sug-copy[contenteditable="true"]{background:#FFFBF4;outline:1px dashed var(--orange)}
+  .sug-actions{display:flex;gap:6px;flex-wrap:wrap}
+  .sug-actions .btn{font-size:12px;padding:6px 10px}
+  .sug-actions .btn.approve{background:var(--good-bg);border-color:#b9dec6;color:#1F6E3B}
+  .sug-actions .btn.approve.on{background:var(--good);color:#fff;border-color:var(--good)}
+  .sug-actions .btn.reject{background:var(--bad-bg);border-color:#e8b8b8;color:#8a2222}
+  .sug-actions .btn.reject.on{background:var(--bad);color:#fff;border-color:var(--bad)}
+  .sug-actions .btn.edit{background:var(--warn-bg);border-color:#e9d9a1;color:#7a5519}
+  .sug-state{margin-top:8px;font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.05em}
+  .sug.state-approved{background:linear-gradient(180deg,#F4FBF6 0%,#fff 100%)}
+  .sug.state-rejected{background:linear-gradient(180deg,#FBF4F4 0%,#fff 100%);opacity:.7}
+  .sug-notes{
+    margin-top:8px;font-size:13px;width:100%;border:1px solid var(--line);border-radius:4px;padding:6px 8px;
+    font-family:inherit;resize:vertical;min-height:32px;
+  }
+
+  /* Decisions log */
+  .log{padding:16px;font-size:13px}
+  .log table{width:100%;border-collapse:collapse}
+  .log th, .log td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+  .log th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);font-weight:600}
+  .log .pill{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+  .pill.approved{background:var(--good-bg);color:#1F6E3B}
+  .pill.rejected{background:var(--bad-bg);color:#8a2222}
+  .pill.pending{background:var(--line-soft);color:var(--ink-soft)}
+
+  /* Comment markers */
+  .comment-marker{
+    display:inline-block;width:18px;height:18px;border-radius:50%;background:var(--orange);color:#fff;
+    text-align:center;line-height:18px;font-size:11px;font-weight:700;margin-left:4px;cursor:pointer;vertical-align:middle;
+  }
+
+  .legend{font-size:12px;color:var(--ink-soft);padding:10px 16px;background:#FAFBFC;border-bottom:1px solid var(--line)}
+  .legend kbd{background:#fff;border:1px solid var(--line);padding:1px 5px;border-radius:3px;font-family:inherit;font-size:11px}
+
+  /* Side-by-side */
+  .sxs{display:grid;grid-template-columns:1fr 1fr;gap:0}
+  .sxs > div{padding:0}
+  .sxs > div:first-child{border-right:1px solid var(--line)}
+  .sxs .label{padding:8px 12px;background:#FAFBFC;border-bottom:1px solid var(--line);font-size:11px;text-transform:uppercase;font-weight:600;letter-spacing:.05em;color:var(--ink-soft)}
+
+  .hide{display:none !important}
+
+  /* ---------- v2 additions: variant UI + injected elements ---------- */
+  .variants{margin:8px 0}
+  .variant{
+    display:block;padding:8px 10px;border:1px solid var(--line);border-radius:6px;margin:6px 0;
+    background:#fff;cursor:pointer;font-size:13px;line-height:1.45;
+  }
+  .variant:hover{border-color:var(--orange);background:#FFFBF4}
+  .variant input[type="radio"]{margin-right:8px;vertical-align:middle}
+  .variant.selected{border-color:var(--orange);background:var(--orange-soft)}
+  .variant .vlabel{font-weight:600;color:var(--ink);font-size:12px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;display:block}
+  .variant .vcopy{white-space:pre-wrap;color:#2c3a47;font-family:Menlo,Monaco,monospace;font-size:12px;line-height:1.5}
+  .variant.custom textarea{
+    width:100%;border:1px solid var(--line);border-radius:4px;padding:6px;font-family:Menlo,Monaco,monospace;font-size:12px;
+    min-height:60px;resize:vertical;margin-top:6px;
+  }
+  .preview-btn{
+    background:transparent;border:1px solid var(--line);border-radius:4px;padding:5px 10px;font-size:12px;
+    cursor:pointer;color:var(--ink-soft);font-weight:500;
+  }
+  .preview-btn.on{background:var(--orange);color:#fff;border-color:var(--orange)}
+  .preview-btn:hover{border-color:var(--orange);color:var(--ink)}
+
+  /* Email injection markers — visually flagged when previewing vs approved */
+  .x-injected{position:relative}
+  .x-injected.preview-on{outline:2px dashed var(--orange);outline-offset:2px;animation:pulse 1.6s ease-out 1}
+  .x-injected.approved::before{
+    content:'✓ approved change';
+    position:absolute;top:-10px;right:8px;background:var(--good);color:#fff;
+    font-size:9px;padding:2px 6px;border-radius:3px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+    pointer-events:none;z-index:5;
+  }
+  body.show-markers .x-injected.preview-on::before{
+    content:'PREVIEW';position:absolute;top:-10px;right:8px;background:var(--orange);color:#fff;
+    font-size:9px;padding:2px 6px;border-radius:3px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+    pointer-events:none;z-index:5;
+  }
+  /* Always show preview marker */
+  .x-injected.preview-on:not(.approved)::before{
+    content:'PREVIEW';position:absolute;top:-10px;right:8px;background:var(--orange);color:#fff;
+    font-size:9px;padding:2px 6px;border-radius:3px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+    pointer-events:none;z-index:5;
+  }
+
+  /* Injected element styles */
+  .best-of-chip{
+    display:block;background:linear-gradient(180deg,#1a242d,#27343D);color:#fff;
+    text-align:center;padding:10px 14px;border-radius:6px;margin:12px 0 18px;
+    font-weight:700;font-size:14px;letter-spacing:.01em;
+  }
+  .best-of-chip .trophy{color:#FFD37A;margin-right:6px}
+  .drumroll-line{
+    font-style:italic;color:var(--ink-soft);margin:8px 0 4px;font-size:16px;
+  }
+  .big-honking{margin:14px 0}
+  .big-honking .border{
+    font-size:18px;letter-spacing:.05em;line-height:1;margin:6px 0;color:var(--bad);
+  }
+  .big-honking .body{
+    font-weight:700;font-size:16px;line-height:1.4;color:var(--ink);margin:6px 0;
+  }
+  .pps-line{font-size:13px;color:var(--ink-soft);margin-top:10px;line-height:1.5}
+  .meet-tease{
+    font-size:14px;color:var(--ink-soft);background:#FAFBFC;border-left:3px solid var(--orange);
+    padding:8px 12px;border-radius:0 4px 4px 0;margin:10px 0;font-style:italic;
+  }
+  .disarming-line{font-size:16px;line-height:1.5;color:var(--ink-soft);font-style:italic;margin:8px 0}
+  .escape-hatch{font-size:15px;background:var(--info-bg);border-left:3px solid var(--info);padding:8px 12px;border-radius:0 4px 4px 0;margin:8px 0}
+  .escape-hatch a{font-weight:700}
+  .pro-tip{
+    background:#FFF7E0;border:1px dashed #d9b94c;border-radius:8px;padding:12px 14px;margin:14px 0;
+    font-size:14px;line-height:1.55;
+  }
+  .pro-tip .label{font-weight:700;color:#7a5519;font-size:12px;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px}
+  .strangers-block{
+    background:#FAFBFC;border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin:14px 0;font-size:15px;line-height:1.5;
+  }
+  .competitive-coverage{font-size:13px;color:var(--ink-soft);font-style:italic;margin:6px 0 0;padding-left:4px}
+  .subject-bar{
+    background:#FAFBFC;border-bottom:1px solid var(--line);padding:10px 24px;font-size:13px;color:var(--ink-soft);
+    border-radius:4px 4px 0 0;
+  }
+  .subject-bar b{color:var(--ink);font-weight:600;margin-right:6px}
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <div>
+    <h1>RFQ Email Workshop</h1>
+    <div class="meta">Sales sequence redesign · Amanda Q2 goal · Phase 1 = RFQ</div>
+  </div>
+  <div class="actions">
+    <button class="btn ghost" id="resetBtn" title="Clear all decisions + variants">Reset all</button>
+    <button class="btn primary" id="exportBtn">Export final email</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- LEFT: Email preview -->
+  <section class="pane">
+    <div class="pane-head">
+      <h2>Email preview</h2>
+      <div class="tabs" id="viewTabs">
+        <button class="tab active" data-view="proposed">Proposed (KP draft)</button>
+        <button class="tab" data-view="current">Current (live)</button>
+        <button class="tab" data-view="sxs">Side-by-side</button>
+      </div>
+    </div>
+    <div class="legend">
+      <b>How it works:</b> Each suggestion has 1+ variants (radio-pick) plus an "Other" custom textarea. Click <b>👁 Preview in email</b> to see that variant rendered live in the email (orange dashed outline). Click <b>✓ Approve</b> to lock it into the running final version (green checkmark badge). Approved changes stack — the email evolves as you go. Export when done.
+    </div>
+    <div class="pane-body">
+
+      <!-- PROPOSED VIEW -->
+      <div id="view-proposed" class="email-wrap">
+        <div class="email" id="emailProposed">
+          <div class="email-pad">
+            <img class="logo" src="https://www.einsteinmoving.com/wp-content/uploads/2024/02/einstein-logo.png" alt="Einstein logo">
+
+            <p data-edit data-anchor="greeting"><b>Hi {customer name},</b></p>
+
+            <p data-edit data-anchor="intro">Thanks for thinking of us! Before your quote, here's a quick look at what moving day is actually like with our crew:</p>
+
+            <div class="video" data-anchor="video">
+              <div class="play">▶</div>
+            </div>
+            <div class="video-cap" data-edit>▶ Moving day with Einstein (2 min)</div>
+
+            <p data-edit data-anchor="estimate-context">Based on a 2-bedroom apartment with about a 30-minute drive between homes, we're estimating <b>7 hours with a 2-mover crew</b>. That's a real estimate, not a lowball to get you in the door. We bill in 15-minute increments after the 2.5-hour minimum, so you only pay for the time we actually use.</p>
+
+            <p><b>Here's the bottom line:</b></p>
+
+            <div class="qbox" data-anchor="quote-summary">
+              <div class="qhead">📋 Your quote summary</div>
+              <div class="qrow"><span>🚚 Team</span><span data-edit><b>2 Movers + 1 Truck</b></span></div>
+              <div class="qrow"><span>⏱️ Estimated Time</span><span data-edit><b>7 hours</b></span></div>
+              <div class="qrow"><span>💵 Hourly Rate</span><span data-edit><b>$190/hour</b></span></div>
+              <div class="qtotal"><span>💰 Your Estimate</span><span data-edit>$1,330</span></div>
+              <div class="qnote" data-edit>That's the all-in price. No asterisks, no "oh, one more thing" on moving day.</div>
+            </div>
+
+            <div class="pair" data-anchor="included-block">
+              <div class="col good">
+                <h4>✅ What's included, no extra charge:</h4>
+                <ul data-edit>
+                  <li>✓ Moving supplies (shrink wrap, pads, bands)</li>
+                  <li>✓ $2,000 Damage Coverage (for FREE)</li>
+                  <li>✓ Furniture assembly & disassembly</li>
+                  <li>✓ Credit card processing fees</li>
+                  <li>✓ Taxes & insurance</li>
+                  <li>✓ On-time guarantee</li>
+                  <li>✓ 4 trees planted for your move! 🌳</li>
+                </ul>
+              </div>
+              <div class="col bad">
+                <h4>🚫 What you won't see on your invoice (but might elsewhere):</h4>
+                <ul data-edit>
+                  <li>❌ Fuel surcharges ($50+ elsewhere)</li>
+                  <li>❌ Shrink wrap fees ($45+ elsewhere)</li>
+                  <li>❌ Credit card fees (3–4% elsewhere)</li>
+                  <li>❌ Valuation fees ($99 elsewhere)</li>
+                  <li>❌ Admin fees (4% elsewhere)</li>
+                </ul>
+              </div>
+            </div>
+            <div class="savings" data-edit data-anchor="savings">💰 Tallied up, most folks save around $375 compared to quotes with a similar hourly rate.</div>
+
+            <hr class="hr">
+
+            <h2 class="section" data-edit data-anchor="trust-heading">Why people trust us with their stuff:</h2>
+            <div class="trust" data-anchor="trust-block">
+              <div class="item"><span class="ico">⭐</span><span data-edit>4.9 stars from 8,000+ reviews</span></div>
+              <div class="item"><span class="ico">🏘️</span><span data-edit>100,000+ moves completed</span></div>
+              <div class="item"><span class="ico">🏆</span><span data-edit>55+ awards and counting</span></div>
+              <div class="item"><span class="ico">💪</span><span data-edit>Background-checked, W-2 employees (no day-labour contractors)</span></div>
+            </div>
+
+            <div class="cta" data-anchor="cta">
+              <h3 data-edit>🚀 Ready to lock it in?</h3>
+              <p data-edit><b>⚠️ Heads up:</b> your date (<i>{insert date here}</i>) is <b>NOT</b> being held yet. To reserve it, just reply with the following details:</p>
+              <ol data-edit>
+                <li>Confirm Start and Ending Addresses</li>
+                <li>Any additional stops (address)</li>
+                <li>Best phone number to reach you (day of move)</li>
+                <li>Any special items (piano, antiques, etc.)</li>
+                <li>Basic inventory list of major furniture</li>
+              </ol>
+              <p data-edit>As soon as we hear back, we'll send your confirmation, and your date will be locked in. 🎉</p>
+            </div>
+
+            <p data-edit data-anchor="signoff">Looking forward to moving you,<br><b>{sender name}</b><br>Einstein Moving Company<br>(xxx) xxx-xxxx<br>www.einsteinmoving.com</p>
+
+            <p class="small" data-edit data-anchor="ps">P.S. Want tips on choosing the right mover? <a href="#">Here are 12 Tips to Help You Choose the Best Moving Company</a> — even if you don't choose us!</p>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- CURRENT VIEW -->
+      <div id="view-current" class="email-wrap hide">
+        <div class="email">
+          <div class="email-pad">
+            <img class="logo" src="https://www.einsteinmoving.com/wp-content/uploads/2024/02/einstein-logo.png" alt="Einstein logo">
+            <p><b>Hi Jim!</b></p>
+            <p>Thanks so much for sending in your moving inquiry. Glad you found us. 😃</p>
+            <hr class="hr">
+            <h2 class="section">In This Email</h2>
+            <div class="toc-row">💪 Why Einstein</div>
+            <div class="toc-row">💰 Your Quote</div>
+            <div class="toc-row">🚚 Next Steps</div>
+            <hr class="hr">
+            <h2 class="section">💪 Why Einstein</h2>
+            <p>My name is Cameron Brown, and I want to share a few things to help with your move (whether you choose to move with us or not).</p>
+            <p><b>If you're ready to book, just scroll to the bottom of this email for our next steps!</b></p>
+            <p>Tiny drum roll… 🥁🥁🥁</p>
+            <p>Here's what to know about Einstein Moving, and why we've earned a wildly impressive <b>4.9 out of 5 stars</b> with over 4,500 reviews and have become the most awarded moving company of all time:</p>
+            <p style="font-size:20px"><b>💵 How Our Hourly Rate Works</b></p>
+            <p style="font-size:20px"><b>1st Day</b></p>
+            <ul>
+              <li>We charge $178.00 an hour for 2 mover crew.</li>
+              <li>There is a 2.5 hour minimum.</li>
+            </ul>
+            <p>Your move time officially starts once we arrive on site and begin the actual move. If we go past that 2.5 hour minimum, we charge in 15-minute increments — so you'll never pay for more time than you actually need.</p>
+            <p><b>Want to know the best part?</b> There are no additional or hidden fees of any kind. No surprises.</p>
+            <p>Our hourly rate includes all this awesome stuff:</p>
+            <ul>
+              <li>Gas and trucks. No travel fees or fuel surcharges here!</li>
+              <li>Moving supplies (shrink wrap, pads, bands, etc)</li>
+              <li>Taxes and Insurance</li>
+              <li><a href="#">On Time Guarantee</a></li>
+              <li>Credit card processing fees</li>
+              <li>Assembly and Disassembly of any furniture items (our team will have all the required tools on hand)</li>
+              <li><a href="#">Going Carbon Neutral</a>: We plant 4 trees for every move completed!</li>
+            </ul>
+            <p>That's not all! We are proud to lead our industry by including our <a href="#">No Worries Damage Coverage</a> in our flat hourly rate. This extra form of valuation coverage allocates up to $2,000 to repair, replace, or reimburse for any items damaged during the move process. This goes WAAAAY beyond the industry standard of $.60 per pound of coverage offered by our competitors.</p>
+            <p style="font-size:20px"><b>👋 Meet your movers.</b></p>
+            <p>We are proud to have the highest paid, most well vetted, and most rigorously trained movers in the industry. You'll know who your movers are in advance thanks to our <a href="#">Meet Your Movers</a> email we send to you a few days before your move. Now you don't have to worry about strangers touching your stuff!</p>
+            <hr class="hr">
+            <h2 class="section">💰 Your Quote</h2>
+            <p>As for your particular move: A typical 1600 to 1699 sqft House can cost $1,157.00 to $1,513.00, and usually takes 6.5 to 8.5 hours.</p>
+            <p style="font-size:20px">Based on the details you shared, <b>we recommend budgeting around $712.00 for your move</b>.</p>
+            <p>👆 <b>This is an estimate based on the info you shared and our experience with previous moves. Want to ensure accuracy? Feel free to reply with an inventory list of your furniture items as well as a rough box count.</b><br><br>Obviously there are a number of factors that determine move time but probably the biggest one is how well prepared you are. Small miscellaneous stuff (hanging clothes, lamps, garden tools, etc.) is what takes us the most time so boxing things up well and taking the small stuff yourself can really help keep the cost down.</p>
+            <hr class="hr">
+            <h2 class="section">🚚 Next Steps</h2>
+            <p>💥💥💥💥💥💥💥💥</p>
+            <p><b>BIG, HONKING IMPORTANT NOTE:</b> The availability of your requested date (Wednesday, May 20th 2026) is always changing. This date is <b>NOT</b> being held for you… yet.</p>
+            <p>💥💥💥💥💥💥💥💥</p>
+            <p><b>Take the next step to reserve your moving date with us by replying with your answers to the items below!</b></p>
+            <ol>
+              <li>Address you're moving from (including floor and unit # if applicable)</li>
+              <li>Address you're moving to</li>
+              <li>Best phone number to reach you</li>
+              <li>Any special considerations (antique furniture, long walks, large book collection, pool table, pianos, basement full of pet snakes, etc.)</li>
+              <li>Estimated number of boxes</li>
+              <li>Basic inventory list of major items (bed, desk, shelves, etc)</li>
+              <li>If a storage unit is involved, is it an internal climate controlled unit? What floor is it on?</li>
+              <li>How many bedrooms, offices, or guest rooms? Do you have an extra living room, formal dining room, game room, back yard shed, etc?</li>
+            </ol>
+            <p><b>Once you respond to this email we'll work on confirming your booking.</b> Only once you receive your confirmation email (Subject line: "Your Move is Confirmed - Yay!") is your job booked and your date being held.</p>
+            <p>Looking forward to moving you,<br><b>Cameron Brown</b><br>Einstein Moving Company<br>+1 (813) 934-7221<br>www.einsteinmoving.com</p>
+            <p class="small">P.S. Want more tips on choosing the right moving company, even if you don't choose us? <a href="#">Here are 12 Tips to Help You Choose the Best Moving Company</a>.</p>
+            <p class="small">P.P.S. Just a reminder, movers will accept payment at the completion of the move. We accept all major credit/debit cards, cash, and cash equivalents (cashier's check, money order, etc.). Companies that need to pay by check for an office move can contact our office ahead of time to confirm a check is acceptable.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- SXS VIEW -->
+      <div id="view-sxs" class="hide">
+        <div class="sxs">
+          <div>
+            <div class="label">Current (live)</div>
+            <div class="email-wrap" style="padding:14px"><div class="email"><div class="email-pad" style="font-size:13px;line-height:1.4">
+              See <b>Current (live)</b> tab for full-fidelity render. Side-by-side shows the structural diff:
+              <ul>
+                <li>~900 words, 5 sections</li>
+                <li>"Why Einstein" before quote</li>
+                <li>Voice peaks: drum roll, BIG HONKING, snake basement, P.P.S.</li>
+                <li>Cameron-as-human intro</li>
+                <li>No quote summary box</li>
+                <li>No included/won't-pay grid</li>
+                <li>No video</li>
+                <li>No trust block</li>
+              </ul>
+            </div></div></div>
+          </div>
+          <div>
+            <div class="label">Proposed (KP)</div>
+            <div class="email-wrap" style="padding:14px"><div class="email"><div class="email-pad" style="font-size:13px;line-height:1.4">
+              <ul>
+                <li>~half the word count</li>
+                <li>Video first</li>
+                <li>Quote summary box</li>
+                <li>Included vs won't-pay side-by-side</li>
+                <li>$375 savings callout</li>
+                <li>Trust block (4.9★ / 100K / 55 awards / W-2)</li>
+                <li>Voice flatter — drum roll, BIG HONKING, snakes, P.P.S. all gone</li>
+                <li>Generic {sender name} sign-off</li>
+              </ul>
+            </div></div></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- RIGHT: Suggestions -->
+  <section class="pane" id="sugPane">
+    <div class="pane-head">
+      <h2>Suggestions (15) <span style="font-weight:400;color:var(--ink-soft);font-size:11px;text-transform:none">· pick variant → preview → approve</span></h2>
+      <span class="meta" id="sugSummary">0 approved · 0 rejected · 8 pending</span>
+    </div>
+    <div id="sugList"></div>
+  </section>
+
+</main>
+
+<section style="padding:0 24px 32px">
+  <div class="pane">
+    <div class="pane-head"><h2>Decisions log</h2></div>
+    <div class="log" id="decisionsLog"></div>
+  </div>
+</section>
+
+<script src="widget.js" data-tool="rfq-workshop" data-page="RFQ Email Workshop"></script>
+<script>
+/* ---------- State ---------- */
+const STORAGE = 'rfq-workshop-v2';
+const state = {
+  suggestions: {},   // {id: {status:'pending|approved|rejected', selectedVariant:'a|b|c|custom', customCopy:'', notes:'', previewing:false}}
+  view: 'proposed'
+};
+
+function load(){
+  try{
+    const raw = localStorage.getItem(STORAGE);
+    if(raw){ Object.assign(state, JSON.parse(raw)); }
+  }catch(e){}
+}
+function save(){
+  localStorage.setItem(STORAGE, JSON.stringify(state));
+}
+function getSt(id){
+  if(!state.suggestions[id]){
+    state.suggestions[id] = {status:'pending', selectedVariant:null, customCopy:'', notes:'', previewing:false};
+  }
+  return state.suggestions[id];
+}
+
+/* ---------- Suggestions data (v2 — variants + apply funcs) ----------
+   Each suggestion has 1+ variants. Variant has {id, label, copy, apply(rootEl, copy)}.
+   apply() mutates the email DOM. Wrap injected elements in .x-injected so we can mark them.
+   --------------------------------------- */
+
+function mkInj(html){
+  const div = document.createElement('div');
+  div.className = 'x-injected';
+  div.innerHTML = html;
+  return div;
+}
+
+const SUGGESTIONS = [
+  {
+    id: 's1-best-of',
+    title: 'NEW (Amanda 5/20): "Voted Best in [Market]" badge at top',
+    why: 'Amanda\'s ask today. Branch-dynamic token — pulls market + streak language by branch. Leads with credibility before the customer ever sees a price. Pairs with the Best Of voting drive workstream.',
+    variants: [
+      {
+        id:'a', label:'Dark badge with trophy (Austin example)',
+        copy:'🏆 Voted Best Moving Company in Austin — 8 years in a row',
+        apply:(root,copy)=>{
+          const logo = root.querySelector('img.logo');
+          const chip = mkInj(`<div class="best-of-chip">${escapeHtml(copy)}</div>`);
+          logo.parentNode.insertBefore(chip, logo.nextSibling);
+        }
+      },
+      {
+        id:'b', label:'Cleaner version (shorter)',
+        copy:'🏆 8x Best Moving Company in Austin',
+        apply:(root,copy)=>{
+          const logo = root.querySelector('img.logo');
+          const chip = mkInj(`<div class="best-of-chip">${escapeHtml(copy)}</div>`);
+          logo.parentNode.insertBefore(chip, logo.nextSibling);
+        }
+      },
+      {
+        id:'c', label:'Inline subtitle under logo (subtler)',
+        copy:'Voted Best in Austin · 8 years running',
+        apply:(root,copy)=>{
+          const logo = root.querySelector('img.logo');
+          const sub = mkInj(`<div style="text-align:center;color:var(--orange);font-weight:600;font-size:13px;margin:-6px 0 14px;letter-spacing:.04em">${escapeHtml(copy)}</div>`);
+          logo.parentNode.insertBefore(sub, logo.nextSibling);
+        }
+      }
+    ]
+  },
+  {
+    id: 's2-savings',
+    title: 'Rework the savings line (Amanda flagged 5/20)',
+    why: '$375 figure ties to specific competitor pricing that varies by market — Tampa is $178/hr, SA + Houston are Standard tier. Pick the framing that\'s defensible across all 10 branches.',
+    variants: [
+      {
+        id:'a', label:'One number + footnote (low risk)',
+        copy:'💰 Most folks save around $375 compared to a typical national-mover quote.*',
+        apply:(root,copy)=>{
+          const el = root.querySelector('.savings');
+          if(el){ el.classList.add('x-injected'); el.innerHTML = escapeHtml(copy); }
+        }
+      },
+      {
+        id:'b', label:'Per-market merge field (Matisen build)',
+        copy:'💰 You\'ll typically save {savings_estimate} compared to similar quotes in your area.',
+        apply:(root,copy)=>{
+          const el = root.querySelector('.savings');
+          if(el){ el.classList.add('x-injected'); el.innerHTML = escapeHtml(copy); }
+        }
+      },
+      {
+        id:'c', label:'Drop the $ figure entirely',
+        copy:'💰 All of these add up. Most national movers bill them on top of the hourly rate — we just include them.',
+        apply:(root,copy)=>{
+          const el = root.querySelector('.savings');
+          if(el){ el.classList.add('x-injected'); el.innerHTML = escapeHtml(copy); }
+        }
+      }
+    ]
+  },
+  {
+    id: 's3-drumroll',
+    title: 'Restore "Tiny drum roll 🥁🥁🥁" before the quote',
+    why: 'Voice peak from the current email. Costs one line, pays back right where customers tense up — at the price reveal.',
+    variants: [
+      {
+        id:'a', label:'Original "Tiny drum roll"',
+        copy:'Tiny drum roll… 🥁🥁🥁',
+        apply:(root,copy)=>{
+          const q = root.querySelector('.qbox');
+          if(q){ q.parentNode.insertBefore(mkInj(`<p class="drumroll-line">${escapeHtml(copy)}</p>`), q); }
+        }
+      },
+      {
+        id:'b', label:'Bolder "And here it is" framing',
+        copy:'Alright, drum roll please… 🥁',
+        apply:(root,copy)=>{
+          const q = root.querySelector('.qbox');
+          if(q){ q.parentNode.insertBefore(mkInj(`<p class="drumroll-line">${escapeHtml(copy)}</p>`), q); }
+        }
+      }
+    ]
+  },
+  {
+    id: 's4-big-honking',
+    title: 'Restore "BIG, HONKING IMPORTANT NOTE" + 💥 borders',
+    why: 'The single most-quoted line in the current email. 💥 borders are why customers actually read it. The "Heads up:" version is forgettable — and this is the ONE thing every customer MUST see (date isn\'t held yet).',
+    variants: [
+      {
+        id:'a', label:'Full 💥 borders + caps (original)',
+        copy:'BIG, HONKING IMPORTANT NOTE: your date ({insert date}) is NOT being held yet.',
+        apply:(root,copy)=>{
+          const cta = root.querySelector('.cta');
+          if(!cta) return;
+          // Find the warning paragraph (first p after h3)
+          const warn = cta.querySelector('p');
+          if(!warn) return;
+          const wrap = mkInj(`<div class="big-honking">
+            <div class="border">💥💥💥💥💥💥💥💥</div>
+            <div class="body">${escapeHtml(copy)}</div>
+            <div class="border">💥💥💥💥💥💥💥💥</div>
+          </div>`);
+          warn.replaceWith(wrap);
+        }
+      },
+      {
+        id:'b', label:'Softer — single line w/ 💥 chip',
+        copy:'💥 BIG, HONKING IMPORTANT NOTE: your date ({insert date}) is NOT being held yet.',
+        apply:(root,copy)=>{
+          const cta = root.querySelector('.cta');
+          if(!cta) return;
+          const warn = cta.querySelector('p');
+          if(!warn) return;
+          const wrap = mkInj(`<p class="big-honking"><b style="color:var(--bad)">${escapeHtml(copy)}</b></p>`);
+          warn.replaceWith(wrap);
+        }
+      }
+    ]
+  },
+  {
+    id: 's5-human',
+    title: 'Real human on the email — replace {sender name}',
+    why: 'Generic template signoff loses the brand voice. Either name the BM/sales rep handling that branch, or add a Meet Your Movers tease.',
+    variants: [
+      {
+        id:'a', label:'Name + branch in signoff (minimum)',
+        copy:'Looking forward to moving you,\n{first_name} from the {branch} team\nEinstein Moving Company\n{phone}\nwww.einsteinmoving.com',
+        apply:(root,copy)=>{
+          const sign = root.querySelector('[data-anchor="signoff"]');
+          if(sign){
+            sign.classList.add('x-injected');
+            sign.innerHTML = escapeHtml(copy).replace(/\n/g,'<br>');
+          }
+        }
+      },
+      {
+        id:'b', label:'Signoff + Meet Your Movers tease above',
+        copy:'Looking forward to moving you,\n{first_name} from the {branch} team\nEinstein Moving Company\n{phone}',
+        apply:(root,copy)=>{
+          const sign = root.querySelector('[data-anchor="signoff"]');
+          if(!sign) return;
+          sign.parentNode.insertBefore(
+            mkInj(`<div class="meet-tease">A few days before your move, we'll send a Meet Your Movers email so you know exactly who's pulling up to your house.</div>`),
+            sign
+          );
+          sign.classList.add('x-injected');
+          sign.innerHTML = escapeHtml(copy).replace(/\n/g,'<br>');
+        }
+      }
+    ]
+  },
+  {
+    id: 's6-voice-list',
+    title: 'Voice up the "won\'t see on your invoice" list',
+    why: 'Same scannable structure, voice baked in, zero added length. "($50+ elsewhere)" reads like a footnote — list items are unused real estate for personality.',
+    variants: [
+      {
+        id:'a', label:'Short snark (max voice)',
+        copy:'❌ Fuel surcharges — nope\n❌ Shrink wrap fees — included\n❌ Credit card "convenience" fees — not a chance\n❌ Valuation fees — already covered (up to $2K)\n❌ Admin fees — we don\'t even know what those are',
+        apply:(root,copy)=>{
+          const ul = root.querySelector('.pair .col.bad ul');
+          if(!ul) return;
+          ul.classList.add('x-injected');
+          ul.innerHTML = copy.split('\n').map(l=>`<li>${escapeHtml(l)}</li>`).join('');
+        }
+      },
+      {
+        id:'b', label:'Half snark / half data (balanced)',
+        copy:'❌ Fuel surcharges (typically $50+) — included\n❌ Shrink wrap fees ($45+) — included\n❌ Credit card "convenience" fees (3-4%) — nope\n❌ Valuation fees ($99+) — already covered\n❌ Admin fees (4%) — never',
+        apply:(root,copy)=>{
+          const ul = root.querySelector('.pair .col.bad ul');
+          if(!ul) return;
+          ul.classList.add('x-injected');
+          ul.innerHTML = copy.split('\n').map(l=>`<li>${escapeHtml(l)}</li>`).join('');
+        }
+      }
+    ]
+  },
+  {
+    id: 's7-pps',
+    title: 'Restore P.P.S. on payment methods',
+    why: 'FAQ-reducer. Bottom of email, zero clutter, reads like a human afterthought — which is the voice. Reduces inbound "how do I pay?" replies.',
+    variants: [
+      {
+        id:'a', label:'Original wording (warm)',
+        copy:'P.P.S. Just a reminder, movers accept payment at the end of the move. We take all major credit/debit cards, cash, and cash equivalents (cashier\'s check, money order). For office moves needing check payment, give the office a heads-up first.',
+        apply:(root,copy)=>{
+          const ps = root.querySelector('[data-anchor="ps"]');
+          if(!ps) return;
+          const pps = mkInj(`<p class="pps-line small">${escapeHtml(copy)}</p>`);
+          ps.parentNode.insertBefore(pps, ps.nextSibling);
+        }
+      },
+      {
+        id:'b', label:'Shorter, no office-check edge case',
+        copy:'P.P.S. Payment\'s due at the end of the move. We take all major cards, cash, cashier\'s check, or money order.',
+        apply:(root,copy)=>{
+          const ps = root.querySelector('[data-anchor="ps"]');
+          if(!ps) return;
+          const pps = mkInj(`<p class="pps-line small">${escapeHtml(copy)}</p>`);
+          ps.parentNode.insertBefore(pps, ps.nextSibling);
+        }
+      }
+    ]
+  },
+  /* ---------- 8 voice-recovery cards from 5/20 sweep of original email ---------- */
+  {
+    id: 's8-disarming',
+    title: '"Whether you choose us or not" disarming altruism line',
+    why: 'Lowers the customer\'s sales-pressure shield instantly. Says "we\'re useful even if you don\'t pick us." Same energy as the P.S. ("12 Tips… even if you don\'t choose us") — two places, one tone.',
+    variants: [
+      {
+        id:'a', label:'Original Cameron phrasing',
+        copy:'My name is {first_name}, and I want to share a few things to help with your move — whether you choose to move with us or not.',
+        apply:(root,copy)=>{
+          const greet = root.querySelector('[data-anchor="greeting"]');
+          const video = root.querySelector('.video');
+          if(!greet || !video) return;
+          const line = mkInj(`<p class="disarming-line">${escapeHtml(copy)}</p>`);
+          video.parentNode.insertBefore(line, video);
+        }
+      },
+      {
+        id:'b', label:'Tighter / less first-person',
+        copy:'A few things below to help with your move — whether you choose us or not.',
+        apply:(root,copy)=>{
+          const video = root.querySelector('.video');
+          if(!video) return;
+          const line = mkInj(`<p class="disarming-line">${escapeHtml(copy)}</p>`);
+          video.parentNode.insertBefore(line, video);
+        }
+      }
+    ]
+  },
+  {
+    id: 's9-escape-hatch',
+    title: 'Escape hatch for buyers who\'ve already decided',
+    why: 'Respects the impatient. People who\'ve already made up their mind don\'t want to scroll the value pitch. Removing this forces them past everything to find the reply prompt.',
+    variants: [
+      {
+        id:'a', label:'Bolded line w/ jump',
+        copy:'Already ready to book? Scroll to the bottom for the quick reply we need.',
+        apply:(root,copy)=>{
+          const video = root.querySelector('.video');
+          if(!video) return;
+          const line = mkInj(`<div class="escape-hatch"><b>${escapeHtml(copy)}</b></div>`);
+          video.parentNode.insertBefore(line, video);
+        }
+      },
+      {
+        id:'b', label:'Quieter version',
+        copy:'(Already ready? Skip to the bottom — we just need a few quick details.)',
+        apply:(root,copy)=>{
+          const video = root.querySelector('.video');
+          if(!video) return;
+          const line = mkInj(`<p class="small" style="color:var(--ink-soft);font-style:italic;margin:6px 0">${escapeHtml(copy)}</p>`);
+          video.parentNode.insertBefore(line, video);
+        }
+      }
+    ]
+  },
+  {
+    id: 's10-strangers',
+    title: '"Strangers touching your stuff" Meet Your Movers line',
+    why: 'Names the real underlying anxiety in the customer\'s own language, then defuses it. THE line — customers screenshot it. More punch than the soft Meet Your Movers tease in card #5.',
+    variants: [
+      {
+        id:'a', label:'Original phrasing (callout block)',
+        copy:'A few days before your move, you\'ll get a "Meet Your Movers" email so you know exactly who\'s coming. No strangers touching your stuff.',
+        apply:(root,copy)=>{
+          const sign = root.querySelector('[data-anchor="signoff"]');
+          if(!sign) return;
+          const block = mkInj(`<div class="strangers-block">👋 ${escapeHtml(copy)}</div>`);
+          sign.parentNode.insertBefore(block, sign);
+        }
+      },
+      {
+        id:'b', label:'Inline italic (less visual weight)',
+        copy:'P.S. — A few days before your move you\'ll get a Meet Your Movers email so you know exactly who\'s pulling up. No strangers touching your stuff.',
+        apply:(root,copy)=>{
+          const sign = root.querySelector('[data-anchor="signoff"]');
+          if(!sign) return;
+          const block = mkInj(`<p style="font-size:14px;font-style:italic;color:var(--ink-soft);margin:10px 0">${escapeHtml(copy)}</p>`);
+          sign.parentNode.insertBefore(block, sign);
+        }
+      }
+    ]
+  },
+  {
+    id: 's11-snakes',
+    title: '"Basement full of pet snakes" — restore the legendary line in the reply list',
+    why: 'Single weirdest, most-quoted line in the current email. Customers screenshot this. Costs zero. The specificity (long walks, large book collection, basement of pet snakes) is the whole vibe — and it gets people thinking about real edge cases they should mention.',
+    variants: [
+      {
+        id:'a', label:'Full original list',
+        copy:'Any special considerations (antique furniture, long walks, large book collection, pool table, pianos, basement full of pet snakes, etc.)',
+        apply:(root,copy)=>{
+          const ol = root.querySelector('.cta ol');
+          if(!ol) return;
+          // Find the "Any special items" li (4th typically) and replace its text
+          const lis = ol.querySelectorAll('li');
+          let target = null;
+          lis.forEach(li => { if(/special items|special considerations/i.test(li.textContent)) target = li; });
+          if(!target) target = lis[3]; // fallback
+          if(target){
+            target.classList.add('x-injected');
+            target.innerHTML = escapeHtml(copy);
+          }
+        }
+      },
+      {
+        id:'b', label:'Trimmed (snakes survive, two examples drop)',
+        copy:'Any special considerations (antiques, long walks, pianos, basement full of pet snakes, etc.)',
+        apply:(root,copy)=>{
+          const ol = root.querySelector('.cta ol');
+          if(!ol) return;
+          const lis = ol.querySelectorAll('li');
+          let target = null;
+          lis.forEach(li => { if(/special items|special considerations/i.test(li.textContent)) target = li; });
+          if(!target) target = lis[3];
+          if(target){
+            target.classList.add('x-injected');
+            target.innerHTML = escapeHtml(copy);
+          }
+        }
+      }
+    ]
+  },
+  {
+    id: 's12-protip',
+    title: '"Box up the small stuff" pro tip — practical voice add',
+    why: 'Genuine advice that also reduces our cost (faster moves = happier movers + better margin). "Garden tools" specificity adds voice. New email has zero pro tip — pure value-add stripped.',
+    variants: [
+      {
+        id:'a', label:'Full pro tip (with garden tools)',
+        copy:'Biggest factor in move time? How prepared you are. Small miscellaneous stuff (hanging clothes, lamps, garden tools, etc.) takes the most time — boxing it up or moving it yourself can save a real chunk of money.',
+        apply:(root,copy)=>{
+          const cta = root.querySelector('.cta');
+          if(!cta) return;
+          const block = mkInj(`<div class="pro-tip"><span class="label">💡 Pro tip to save time + $</span>${escapeHtml(copy)}</div>`);
+          cta.parentNode.insertBefore(block, cta);
+        }
+      },
+      {
+        id:'b', label:'Shorter version',
+        copy:'Want to save money? The biggest time-eater on moving day is the small stuff (clothes, lamps, knick-knacks). Box it up or move it yourself and you\'ll knock real hours off.',
+        apply:(root,copy)=>{
+          const cta = root.querySelector('.cta');
+          if(!cta) return;
+          const block = mkInj(`<div class="pro-tip"><span class="label">💡 Pro tip to save time + $</span>${escapeHtml(copy)}</div>`);
+          cta.parentNode.insertBefore(block, cta);
+        }
+      }
+    ]
+  },
+  {
+    id: 's13-subject',
+    title: 'Subject line — pick the voice deliberately',
+    why: 'Both options have voice but in different directions. KP\'s sells the included-fees angle; current\'s emojis are warmer. Worth picking on purpose. (Renders as a fake "Subject:" header at top of the preview.)',
+    variants: [
+      {
+        id:'a', label:'Current live (👀 📦)',
+        copy:'Your Einstein Moving quote request 👀 📦',
+        apply:(root,copy)=>{
+          const email = root.querySelector('.email-pad').parentNode;
+          const bar = mkInj(`<div class="subject-bar"><b>Subject:</b> ${escapeHtml(copy)}</div>`);
+          email.insertBefore(bar, email.firstChild);
+        }
+      },
+      {
+        id:'b', label:'KP draft (no-hidden-fees promise)',
+        copy:'Your quote just landed. (No hidden fees inside, we promise.)',
+        apply:(root,copy)=>{
+          const email = root.querySelector('.email-pad').parentNode;
+          const bar = mkInj(`<div class="subject-bar"><b>Subject:</b> ${escapeHtml(copy)}</div>`);
+          email.insertBefore(bar, email.firstChild);
+        }
+      },
+      {
+        id:'c', label:'Hybrid — fees promise + emoji',
+        copy:'Your Einstein quote is in 📦 (no hidden fees, we promise)',
+        apply:(root,copy)=>{
+          const email = root.querySelector('.email-pad').parentNode;
+          const bar = mkInj(`<div class="subject-bar"><b>Subject:</b> ${escapeHtml(copy)}</div>`);
+          email.insertBefore(bar, email.firstChild);
+        }
+      }
+    ]
+  },
+  {
+    id: 's14-waaay-coverage',
+    title: 'Add competitive context to the $2K damage coverage',
+    why: '"$2,000 Damage Coverage" means nothing in isolation. Industry standard ($.60/lb) is alarming context that makes our $2K coverage land as a real differentiator, not a marketing claim.',
+    variants: [
+      {
+        id:'a', label:'Original WAAAAY phrasing',
+        copy:'Quick note on the $2K coverage — it goes WAAAAY beyond the industry standard of $0.60 per pound (yes, per pound) that most competitors offer.',
+        apply:(root,copy)=>{
+          const pair = root.querySelector('.pair');
+          if(!pair) return;
+          const line = mkInj(`<p class="competitive-coverage">${escapeHtml(copy)}</p>`);
+          pair.parentNode.insertBefore(line, pair.nextSibling);
+        }
+      },
+      {
+        id:'b', label:'Drier (no "WAAAAY")',
+        copy:'(For context: the industry standard for damage coverage is $0.60 per pound. We include $2,000 of actual repair/replace coverage — way beyond that floor.)',
+        apply:(root,copy)=>{
+          const pair = root.querySelector('.pair');
+          if(!pair) return;
+          const line = mkInj(`<p class="competitive-coverage">${escapeHtml(copy)}</p>`);
+          pair.parentNode.insertBefore(line, pair.nextSibling);
+        }
+      }
+    ]
+  },
+  {
+    id: 's15-yay-confirm',
+    title: '"Yay!" confirmation subject-line breadcrumb',
+    why: 'Telling customers the exact subject line of the next email reduces "did you get my reply?" inbound, prepares them visually for what to expect, and the "Yay!" itself signals warmth. Small but operationally useful.',
+    variants: [
+      {
+        id:'a', label:'Original — name the subject line',
+        copy:'As soon as we hear back, we\'ll send your confirmation email (subject line: "Your Move is Confirmed — Yay!") and your date is locked in. 🎉',
+        apply:(root,copy)=>{
+          const cta = root.querySelector('.cta');
+          if(!cta) return;
+          // last <p> in the CTA box
+          const ps = cta.querySelectorAll('p');
+          const last = ps[ps.length-1];
+          if(last){
+            last.classList.add('x-injected');
+            last.innerHTML = escapeHtml(copy);
+          }
+        }
+      },
+      {
+        id:'b', label:'Just the "Yay!" warmth, no breadcrumb',
+        copy:'Once you reply, we\'ll send you a "Your Move is Confirmed — Yay!" email and your date is locked. 🎉',
+        apply:(root,copy)=>{
+          const cta = root.querySelector('.cta');
+          if(!cta) return;
+          const ps = cta.querySelectorAll('p');
+          const last = ps[ps.length-1];
+          if(last){
+            last.classList.add('x-injected');
+            last.innerHTML = escapeHtml(copy);
+          }
+        }
+      }
+    ]
+  }
+];
+
+/* Default selectedVariant to 'a' on first render */
+SUGGESTIONS.forEach(s => {
+  const st = getSt(s.id);
+  if(!st.selectedVariant){ st.selectedVariant = s.variants[0].id; }
+});
+
+/* ---------- Email re-render (apply approvals + previews) ---------- */
+let BASELINE_HTML = null;
+
+function renderEmail(){
+  const el = document.getElementById('emailProposed');
+  if(!el) return;
+  if(BASELINE_HTML === null){ BASELINE_HTML = el.innerHTML; }
+  el.innerHTML = BASELINE_HTML;
+
+  // Apply approved first (stable order), then previewing on top
+  const applyOne = (s, st, mode) => {
+    const variant = s.variants.find(v => v.id === st.selectedVariant) || s.variants[0];
+    const copy = (st.selectedVariant === 'custom' && st.customCopy) ? st.customCopy : variant.copy;
+    try {
+      variant.apply(el, copy);
+    } catch(e){ console.warn('apply failed', s.id, e); }
+    // Mark injected elements
+    const injected = el.querySelectorAll('.x-injected:not([data-marked])');
+    injected.forEach(node => {
+      node.dataset.marked = '1';
+      if(mode === 'approved') node.classList.add('approved');
+      else if(mode === 'preview') node.classList.add('preview-on');
+    });
+  };
+
+  SUGGESTIONS.forEach(s => {
+    const st = state.suggestions[s.id];
+    if(!st) return;
+    if(st.status === 'approved') applyOne(s, st, 'approved');
+  });
+  SUGGESTIONS.forEach(s => {
+    const st = state.suggestions[s.id];
+    if(!st) return;
+    if(st.previewing && st.status !== 'approved') applyOne(s, st, 'preview');
+  });
+}
+
+/* ---------- Render: suggestions ---------- */
+function renderSug(){
+  const list = document.getElementById('sugList');
+  list.innerHTML = '';
+  SUGGESTIONS.forEach((s, i) => {
+    const st = getSt(s.id);
+    const div = document.createElement('div');
+    div.className = 'sug state-' + st.status;
+    div.dataset.sugId = s.id;
+
+    const variantHTML = s.variants.map(v => `
+      <label class="variant ${st.selectedVariant===v.id?'selected':''}" data-var-id="${v.id}" data-sug-id="${s.id}">
+        <span class="vlabel"><input type="radio" name="var-${s.id}" value="${v.id}" ${st.selectedVariant===v.id?'checked':''}> ${escapeHtml(v.label)}</span>
+        <div class="vcopy">${escapeHtml(v.copy)}</div>
+      </label>
+    `).join('');
+
+    const customSel = st.selectedVariant === 'custom';
+    const customHTML = `
+      <label class="variant custom ${customSel?'selected':''}" data-var-id="custom" data-sug-id="${s.id}">
+        <span class="vlabel"><input type="radio" name="var-${s.id}" value="custom" ${customSel?'checked':''}> Other (write your own)</span>
+        <textarea data-custom="${s.id}" placeholder="Type custom copy…">${escapeHtml(st.customCopy||'')}</textarea>
+      </label>
+    `;
+
+    div.innerHTML = `
+      <div class="sug-head">
+        <h3 class="sug-title">${i+1}. ${escapeHtml(s.title)}</h3>
+        <span class="sug-num">${s.id}</span>
+      </div>
+      <div class="sug-why">${escapeHtml(s.why)}</div>
+      <div class="variants">${variantHTML}${customHTML}</div>
+      <div class="sug-actions">
+        <button class="preview-btn ${st.previewing?'on':''}" data-act="preview" data-id="${s.id}">👁 ${st.previewing?'Previewing':'Preview in email'}</button>
+        <button class="btn approve ${st.status==='approved'?'on':''}" data-act="approve" data-id="${s.id}">✓ Approve</button>
+        <button class="btn reject ${st.status==='rejected'?'on':''}" data-act="reject" data-id="${s.id}">✗ Reject</button>
+        ${st.status!=='pending' ? `<button class="btn" data-act="reset" data-id="${s.id}">↺ Undo</button>` : ''}
+      </div>
+      <textarea class="sug-notes" placeholder="Notes for Amanda / KP…" data-notes="${s.id}">${escapeHtml(st.notes||'')}</textarea>
+      <div class="sug-state">Status: <b>${st.status}</b>${st.status==='approved'?' · variant <b>'+st.selectedVariant+'</b>':''}</div>
+    `;
+    list.appendChild(div);
+  });
+  updateSummary();
+  renderLog();
+  renderEmail();
+}
+
+function updateSummary(){
+  let a=0,r=0,p=0;
+  SUGGESTIONS.forEach(s => {
+    const st = state.suggestions[s.id]?.status || 'pending';
+    if(st==='approved') a++;
+    else if(st==='rejected') r++;
+    else p++;
+  });
+  document.getElementById('sugSummary').textContent = `${a} approved · ${r} rejected · ${p} pending`;
+}
+
+function renderLog(){
+  const log = document.getElementById('decisionsLog');
+  let rows = SUGGESTIONS.map(s => {
+    const st = state.suggestions[s.id] || {status:'pending',notes:''};
+    return `<tr>
+      <td><span class="pill ${st.status}">${st.status}</span></td>
+      <td>${escapeHtml(s.title)}</td>
+      <td>${escapeHtml(st.notes||'—')}</td>
+    </tr>`;
+  }).join('');
+  log.innerHTML = `<table>
+    <thead><tr><th>Decision</th><th>Suggestion</th><th>Notes</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+/* ---------- Interactions ---------- */
+const sugList = document.getElementById('sugList');
+
+sugList.addEventListener('click', e => {
+  // Variant pick (whole label)
+  const variant = e.target.closest('.variant');
+  if(variant && !e.target.closest('textarea')){
+    const sugId = variant.dataset.sugId;
+    const varId = variant.dataset.varId;
+    const st = getSt(sugId);
+    if(st.selectedVariant !== varId){
+      st.selectedVariant = varId;
+      save();
+      renderSug();
+      // If approved or previewing, scroll email to show change
+      if(st.status === 'approved' || st.previewing){
+        scrollToFirstInjected();
+      }
+    }
+    return;
+  }
+
+  const actBtn = e.target.closest('[data-act]');
+  if(!actBtn) return;
+  const id = actBtn.dataset.id;
+  const act = actBtn.dataset.act;
+  const st = getSt(id);
+
+  if(act === 'preview'){
+    // Toggle preview; turning preview on for one suggestion turns it off for others
+    // (to keep the email clean — but actually we WANT cumulative preview. Keep stacking.)
+    st.previewing = !st.previewing;
+  } else if(act === 'approve'){
+    if(st.status === 'approved'){
+      st.status = 'pending';
+    } else {
+      st.status = 'approved';
+      st.previewing = false; // approved is more permanent than preview
+    }
+  } else if(act === 'reject'){
+    st.status = st.status === 'rejected' ? 'pending' : 'rejected';
+    st.previewing = false;
+  } else if(act === 'reset'){
+    st.status = 'pending';
+    st.previewing = false;
+  }
+  save();
+  renderSug();
+  if(st.status === 'approved' || st.previewing){
+    scrollToFirstInjected();
+  }
+});
+
+sugList.addEventListener('input', e => {
+  // Notes
+  const notes = e.target.closest('[data-notes]');
+  if(notes){
+    const id = notes.dataset.notes;
+    getSt(id).notes = notes.value;
+    save();
+    renderLog();
+    return;
+  }
+  // Custom copy
+  const custom = e.target.closest('[data-custom]');
+  if(custom){
+    const id = custom.dataset.custom;
+    const st = getSt(id);
+    st.customCopy = custom.value;
+    if(st.selectedVariant !== 'custom') st.selectedVariant = 'custom';
+    save();
+    if(st.status === 'approved' || st.previewing){
+      renderEmail();
+    }
+    return;
+  }
+});
+
+sugList.addEventListener('change', e => {
+  // Radio buttons (in case label-click missed it)
+  if(e.target.type === 'radio'){
+    const variant = e.target.closest('.variant');
+    if(variant){
+      const sugId = variant.dataset.sugId;
+      const varId = variant.dataset.varId;
+      const st = getSt(sugId);
+      st.selectedVariant = varId;
+      save();
+      renderSug();
+    }
+  }
+});
+
+function scrollToFirstInjected(){
+  setTimeout(() => {
+    const first = document.querySelector('#emailProposed .x-injected.preview-on, #emailProposed .x-injected.approved');
+    if(first){
+      first.scrollIntoView({behavior:'smooth', block:'center'});
+    }
+  }, 50);
+}
+
+/* Tab switching */
+document.getElementById('viewTabs').addEventListener('click', e => {
+  const t = e.target.closest('[data-view]');
+  if(!t) return;
+  switchView(t.dataset.view);
+});
+function switchView(v){
+  state.view = v;
+  document.querySelectorAll('#viewTabs .tab').forEach(b => b.classList.toggle('active', b.dataset.view===v));
+  ['proposed','current','sxs'].forEach(name => {
+    document.getElementById('view-'+name).classList.toggle('hide', name!==v);
+  });
+  save();
+}
+
+/* Export */
+document.getElementById('exportBtn').addEventListener('click', () => {
+  const lines = ['# RFQ Email Workshop — Decisions Export', '', `Generated: ${new Date().toLocaleString()}`, ''];
+  let a=[],r=[],p=[];
+  SUGGESTIONS.forEach(s => {
+    const st = state.suggestions[s.id] || {status:'pending',notes:''};
+    const v = s.variants.find(vv => vv.id === st.selectedVariant);
+    const finalCopy = (st.selectedVariant === 'custom' && st.customCopy)
+      ? st.customCopy
+      : (v ? v.copy : '');
+    const block = `### ${s.title}
+- Status: **${st.status}**
+- Selected variant: **${st.selectedVariant || '(none)'}**${v?` — ${v.label}`:''}
+- Final copy:
+\`\`\`
+${finalCopy}
+\`\`\`
+- Rationale: ${s.why}
+- Notes: ${st.notes||'—'}`;
+    if(st.status==='approved') a.push(block);
+    else if(st.status==='rejected') r.push(block);
+    else p.push(block);
+  });
+  if(a.length) lines.push('## ✅ Approved (in final email)', '', ...a, '');
+  if(r.length) lines.push('## ✗ Rejected', '', ...r, '');
+  if(p.length) lines.push('## ⏳ Pending', '', ...p, '');
+  const blob = new Blob([lines.join('\n')], {type:'text/markdown'});
+  const a2 = document.createElement('a');
+  a2.href = URL.createObjectURL(blob);
+  a2.download = `rfq-decisions-${new Date().toISOString().slice(0,10)}.md`;
+  a2.click();
+});
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  if(!confirm('Reset all decisions, edits, and notes?')) return;
+  localStorage.removeItem(STORAGE);
+  location.reload();
+});
+
+/* ---------- Utils ---------- */
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ---------- Boot ---------- */
+load();
+// Snapshot baseline AFTER initial render, BEFORE applying suggestions
+setTimeout(() => {
+  switchView(state.view || 'proposed');
+  renderSug(); // also calls renderEmail which captures baseline
+}, 0);
+</script>
+
+</body>
+</html>

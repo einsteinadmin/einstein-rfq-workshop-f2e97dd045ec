@@ -1,0 +1,122 @@
+/* =====================================================================
+ * Einstein "Suggest a change" widget — standalone styles
+ *
+ * NOTE: widget.js already injects these styles inline. This file is the
+ * extracted reference copy for anyone who wants to load CSS separately
+ * (e.g. tighter CSP that blocks inline <style>).
+ * ===================================================================== */
+
+.esw-fab {
+  position: fixed; right: 24px; bottom: 24px;
+  width: 56px; height: 56px; border-radius: 50%;
+  background: #EF8B22; color: #fff; border: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px; line-height: 1;
+  cursor: pointer; z-index: 9999;
+  box-shadow: 0 4px 12px rgba(239,139,34,0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  font-family: inherit;
+}
+.esw-fab:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(239,139,34,0.45); }
+.esw-fab:focus-visible { outline: 3px solid #0979C3; outline-offset: 2px; }
+
+.esw-overlay {
+  position: fixed; inset: 0; background: rgba(26,26,26,0.45);
+  display: none; align-items: center; justify-content: center;
+  z-index: 10000; padding: 16px;
+  font-family: "Roboto", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.esw-overlay.esw-open { display: flex; }
+
+.esw-modal {
+  background: #fff; border-radius: 12px;
+  width: 100%; max-width: 480px; padding: 24px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+  max-height: 90vh; overflow-y: auto;
+  color: #1A1A1A;
+}
+.esw-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 12px; margin-bottom: 4px;
+}
+.esw-title { margin: 0; font-size: 18px; font-weight: 500; letter-spacing: -0.01em; }
+.esw-sub { color: #6B7280; font-size: 13px; margin: 4px 0 18px; }
+.esw-close {
+  background: transparent; border: 0; cursor: pointer;
+  font-size: 22px; line-height: 1; color: #6B7280; padding: 4px;
+  border-radius: 4px;
+}
+.esw-close:hover { color: #1A1A1A; background: #F2F4F6; }
+
+.esw-field { margin-bottom: 14px; }
+.esw-label {
+  display: block; font-size: 12px; font-weight: 500;
+  color: #4A4A4A; margin-bottom: 6px;
+  letter-spacing: 0.02em;
+}
+.esw-input, .esw-textarea, .esw-select {
+  width: 100%; box-sizing: border-box;
+  border: 1px solid #D6D6D6; border-radius: 6px;
+  padding: 9px 12px; font-size: 14px; font-family: inherit;
+  color: #1A1A1A; background: #fff;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.esw-input:focus, .esw-textarea:focus, .esw-select:focus {
+  outline: 0; border-color: #0979C3;
+  box-shadow: 0 0 0 3px rgba(9,121,195,0.15);
+}
+.esw-textarea { resize: vertical; min-height: 96px; font-family: inherit; }
+.esw-count { font-size: 11px; color: #9CA3AF; margin-top: 4px; text-align: right; }
+.esw-req { color: #C62828; margin-left: 2px; }
+
+.esw-actions {
+  display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px;
+}
+.esw-btn {
+  border: 1px solid #D6D6D6; background: #fff;
+  border-radius: 6px; padding: 9px 16px;
+  font-size: 13px; font-family: inherit; color: #4A4A4A;
+  cursor: pointer; transition: all 0.15s;
+}
+.esw-btn:hover { background: #F2F4F6; }
+.esw-btn-primary {
+  background: #0979C3; color: #fff; border-color: #0979C3;
+}
+.esw-btn-primary:hover { background: #086aa8; border-color: #086aa8; }
+.esw-btn-primary:disabled {
+  background: #9CA3AF; border-color: #9CA3AF; cursor: not-allowed;
+}
+
+.esw-spinner {
+  display: inline-block; width: 14px; height: 14px;
+  border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff;
+  border-radius: 50%; animation: esw-spin 0.7s linear infinite;
+  vertical-align: middle; margin-right: 8px;
+}
+@keyframes esw-spin { to { transform: rotate(360deg); } }
+
+.esw-status {
+  text-align: center; padding: 24px 8px 8px;
+}
+.esw-status-icon {
+  width: 48px; height: 48px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 14px; font-size: 26px;
+}
+.esw-status-icon.esw-ok { background: #E8F5E9; color: #2E7D32; }
+.esw-status-icon.esw-warn { background: #FEF3C7; color: #92400E; }
+.esw-status-icon.esw-err { background: #FDECEA; color: #C62828; }
+.esw-status-title { font-size: 16px; font-weight: 500; margin: 0 0 6px; }
+.esw-status-msg { color: #6B7280; font-size: 13px; margin: 0; line-height: 1.55; }
+
+.esw-queue-note {
+  margin-top: 14px; padding: 10px 12px;
+  background: #FFF3E5; border-left: 3px solid #EF8B22;
+  border-radius: 4px; font-size: 12px; color: #4A4A4A;
+}
+
+@media (max-width: 520px) {
+  .esw-fab { right: 16px; bottom: 16px; }
+  .esw-modal { padding: 20px; border-radius: 10px; }
+}
