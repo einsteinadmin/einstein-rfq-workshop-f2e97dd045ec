@@ -199,6 +199,11 @@
     text-align:center;line-height:18px;font-size:11px;font-weight:700;margin-left:4px;cursor:pointer;vertical-align:middle;
   }
 
+  .filter-count{
+    display:inline-block;min-width:18px;padding:1px 6px;margin-left:4px;border-radius:9px;
+    background:var(--line-soft);color:var(--ink-soft);font-size:10px;font-weight:700;
+  }
+  .tab.active .filter-count{background:var(--orange);color:#fff}
   .legend{font-size:12px;color:var(--ink-soft);padding:10px 16px;background:#FAFBFC;border-bottom:1px solid var(--line)}
   .legend kbd{background:#fff;border:1px solid var(--line);padding:1px 5px;border-radius:3px;font-family:inherit;font-size:11px}
 
@@ -549,11 +554,24 @@
 
   <!-- RIGHT: Suggestions -->
   <section class="pane" id="sugPane">
-    <div class="pane-head">
-      <h2>Suggestions (22) <span style="font-weight:400;color:var(--ink-soft);font-size:11px;text-transform:none">· 15 original + 7 StoryBrand audit</span></h2>
-      <span class="meta" id="sugSummary">0 approved · 0 rejected · 8 pending</span>
+    <div class="pane-head" style="flex-direction:column;align-items:stretch;gap:8px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <h2>Suggestions <span style="font-weight:400;color:var(--ink-soft);font-size:11px;text-transform:none">· 15 original + 7 StoryBrand audit</span></h2>
+        <span class="meta" id="sugSummary"></span>
+      </div>
+      <div class="tabs" id="sugFilterTabs">
+        <button class="tab" data-filter="pending">Pending <span class="filter-count" data-c="pending"></span></button>
+        <button class="tab" data-filter="approved">Approved <span class="filter-count" data-c="approved"></span></button>
+        <button class="tab" data-filter="rejected">Rejected <span class="filter-count" data-c="rejected"></span></button>
+        <button class="tab" data-filter="all">All <span class="filter-count" data-c="all"></span></button>
+      </div>
     </div>
     <div id="sugList"></div>
+    <div id="sugEmpty" style="padding:40px 24px;text-align:center;color:var(--ink-soft);font-size:14px;display:none">
+      <div style="font-size:32px;margin-bottom:12px">🎉</div>
+      <div><b>Nothing left in this view.</b></div>
+      <div style="margin-top:6px;font-size:13px">Switch tabs above to see approved or rejected suggestions.</div>
+    </div>
   </section>
 
 </main>
@@ -571,7 +589,8 @@
 const STORAGE = 'rfq-workshop-v2';
 const state = {
   suggestions: {},   // {id: {status:'pending|approved|rejected', selectedVariant:'a|b|c|custom', customCopy:'', notes:'', previewing:false}}
-  view: 'proposed'
+  view: 'proposed',
+  sugFilter: 'pending' // pending | approved | rejected | all
 };
 
 function load(){
@@ -1419,8 +1438,42 @@ function renderEmail(){
 /* ---------- Render: suggestions ---------- */
 function renderSug(){
   const list = document.getElementById('sugList');
+  const empty = document.getElementById('sugEmpty');
   list.innerHTML = '';
-  SUGGESTIONS.forEach((s, i) => {
+
+  // Update filter tabs (counts + active state)
+  const filter = state.sugFilter || 'pending';
+  const counts = {pending:0, approved:0, rejected:0, all:SUGGESTIONS.length};
+  SUGGESTIONS.forEach(s => {
+    const st = state.suggestions[s.id]?.status || 'pending';
+    counts[st]++;
+  });
+  document.querySelectorAll('#sugFilterTabs .tab').forEach(b => {
+    b.classList.toggle('active', b.dataset.filter === filter);
+  });
+  document.querySelectorAll('.filter-count').forEach(c => {
+    c.textContent = counts[c.dataset.c];
+  });
+
+  // Filter the suggestions
+  const visible = SUGGESTIONS.map((s, i) => ({s, i})).filter(({s}) => {
+    const st = state.suggestions[s.id]?.status || 'pending';
+    return filter === 'all' || st === filter;
+  });
+
+  if(visible.length === 0){
+    empty.style.display = '';
+    list.style.display = 'none';
+    updateSummary();
+    renderLog();
+    renderEmail();
+    return;
+  } else {
+    empty.style.display = 'none';
+    list.style.display = '';
+  }
+
+  visible.forEach(({s, i}) => {
     const st = getSt(s.id);
     const div = document.createElement('div');
     div.className = 'sug state-' + st.status;
@@ -1472,7 +1525,9 @@ function updateSummary(){
     else if(st==='rejected') r++;
     else p++;
   });
-  document.getElementById('sugSummary').textContent = `${a} approved · ${r} rejected · ${p} pending`;
+  const total = SUGGESTIONS.length;
+  const done = a + r;
+  document.getElementById('sugSummary').textContent = `${done}/${total} reviewed`;
 }
 
 function renderLog(){
@@ -1598,6 +1653,15 @@ document.getElementById('viewTabs').addEventListener('click', e => {
   const t = e.target.closest('[data-view]');
   if(!t) return;
   switchView(t.dataset.view);
+});
+
+/* Filter tab switching */
+document.getElementById('sugFilterTabs').addEventListener('click', e => {
+  const t = e.target.closest('[data-filter]');
+  if(!t) return;
+  state.sugFilter = t.dataset.filter;
+  save();
+  renderSug();
 });
 function switchView(v){
   state.view = v;
