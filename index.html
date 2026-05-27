@@ -556,7 +556,7 @@
   <section class="pane" id="sugPane">
     <div class="pane-head" style="flex-direction:column;align-items:stretch;gap:8px">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-        <h2>Suggestions <span style="font-weight:400;color:var(--ink-soft);font-size:11px;text-transform:none">· 15 original + 7 StoryBrand audit</span></h2>
+        <h2>Suggestions <span style="font-weight:400;color:var(--ink-soft);font-size:11px;text-transform:none">· 15 voice + 7 StoryBrand + 4 conversion polish</span></h2>
         <span class="meta" id="sugSummary"></span>
       </div>
       <div class="tabs" id="sugFilterTabs">
@@ -815,8 +815,8 @@ const SUGGESTIONS = [
     why: 'FAQ-reducer. Bottom of email, zero clutter, reads like a human afterthought — which is the voice. Reduces inbound "how do I pay?" replies.',
     variants: [
       {
-        id:'a', label:'Original wording (warm)',
-        copy:'P.P.S. Just a reminder, movers accept payment at the end of the move. We take all major credit/debit cards, cash, and cash equivalents (cashier\'s check, money order). For office moves needing check payment, give the office a heads-up first.',
+        id:'a', label:'Tightened (Cameron + KP 5/27)',
+        copy:'P.P.S. Pay at the end of the move — cards, cash, cashier\'s check, or money order. (Office check? Just give us a heads-up first.)',
         apply:(root,copy)=>{
           const ps = root.querySelector('[data-anchor="ps"]');
           if(!ps) return;
@@ -895,27 +895,32 @@ const SUGGESTIONS = [
   {
     id: 's10-strangers',
     title: '"Strangers touching your stuff" Meet Your Movers line',
-    why: 'Names the real underlying anxiety in the customer\'s own language, then defuses it. THE line — customers screenshot it. Lands right after the trust block, before the "ready to lock it in" CTA.',
+    why: 'Names the real underlying anxiety in the customer\'s own language, then defuses it. THE line — customers screenshot it. Now lands ABOVE the trust block so empathy precedes authority (StoryBrand guide-tenet ordering).',
     variants: [
       {
         id:'a', label:'Original phrasing (callout block)',
         copy:'A few days before your move, you\'ll get a "Meet Your Movers" email so you know exactly who\'s coming. No strangers touching your stuff.',
         apply:(root,copy)=>{
-          // Place between trust block and CTA
-          const cta = root.querySelector('.cta');
-          if(!cta) return;
+          // Place ABOVE the trust block heading — empathy before authority
+          const trust = root.querySelector('[data-anchor="trust-heading"]');
+          if(!trust) return;
+          // hr divider sits just above trust heading — insert before that
+          const hr = trust.previousElementSibling;
+          const ref = (hr && hr.tagName === 'HR') ? hr : trust;
           const block = mkInj(`<div class="strangers-block">👋 ${escapeHtml(copy)}</div>`);
-          cta.parentNode.insertBefore(block, cta);
+          ref.parentNode.insertBefore(block, ref);
         }
       },
       {
         id:'b', label:'Inline italic (less visual weight)',
         copy:'A few days before your move you\'ll get a Meet Your Movers email so you know exactly who\'s pulling up. No strangers touching your stuff.',
         apply:(root,copy)=>{
-          const cta = root.querySelector('.cta');
-          if(!cta) return;
+          const trust = root.querySelector('[data-anchor="trust-heading"]');
+          if(!trust) return;
+          const hr = trust.previousElementSibling;
+          const ref = (hr && hr.tagName === 'HR') ? hr : trust;
           const block = mkInj(`<p style="font-size:14px;font-style:italic;color:var(--ink-soft);margin:14px 0">${escapeHtml(copy)}</p>`);
-          cta.parentNode.insertBefore(block, cta);
+          ref.parentNode.insertBefore(block, ref);
         }
       }
     ]
@@ -962,18 +967,21 @@ const SUGGESTIONS = [
   },
   {
     id: 's12-protip',
-    title: '"Biggest factor in estimate accuracy" — fine print inside quote box',
-    why: 'Sits inside the Quote Summary box as the closing note, REPLACING the "That\'s the all-in price..." line. Doubles as estimate-accuracy disclaimer + cost-saving advice for the prepared customer.',
+    title: '"Biggest factor in estimate accuracy" — standalone callout below quote box',
+    why: 'Pro tip + estimate-accuracy disclaimer. Lives as its own card immediately below the Quote Box so the price reveal stays clean. Also blanks out the original "That\'s the all-in price..." note inside the box.',
     variants: [
       {
         id:'a', label:'Estimate-accuracy framing (full)',
         copy:'Biggest factor in estimate accuracy? How prepared you are. Small miscellaneous stuff (hanging clothes, lamps, garden tools, etc.) takes the most time — boxing it up or moving it yourself can save a real chunk of money.',
         apply:(root,copy)=>{
-          // Replace the .qnote inside .qbox
+          // Blank the original qnote inside the qbox so it doesn't duplicate
           const note = root.querySelector('.qbox .qnote');
-          if(!note) return;
-          note.classList.add('x-injected');
-          note.innerHTML = `<span style="font-weight:600;color:#7a5519">💡 </span>${escapeHtml(copy)}`;
+          if(note) note.remove();
+          // Insert a standalone callout immediately AFTER the qbox
+          const qbox = root.querySelector('.qbox');
+          if(!qbox) return;
+          const block = mkInj(`<div class="pro-tip"><span class="label">💡 Pro tip to save time + $</span>${escapeHtml(copy)}</div>`);
+          qbox.parentNode.insertBefore(block, qbox.nextSibling);
         }
       },
       {
@@ -981,19 +989,21 @@ const SUGGESTIONS = [
         copy:'Biggest factor in estimate accuracy? How prepared you are. Small stuff (clothes, lamps, knick-knacks) eats the most time — box it up or move it yourself to keep the bill tight.',
         apply:(root,copy)=>{
           const note = root.querySelector('.qbox .qnote');
-          if(!note) return;
-          note.classList.add('x-injected');
-          note.innerHTML = `<span style="font-weight:600;color:#7a5519">💡 </span>${escapeHtml(copy)}`;
+          if(note) note.remove();
+          const qbox = root.querySelector('.qbox');
+          if(!qbox) return;
+          const block = mkInj(`<div class="pro-tip"><span class="label">💡 Pro tip to save time + $</span>${escapeHtml(copy)}</div>`);
+          qbox.parentNode.insertBefore(block, qbox.nextSibling);
         }
       },
       {
-        id:'c', label:'(Old) Standalone callout above CTA',
-        copy:'Biggest factor in move time? How prepared you are. Small miscellaneous stuff (hanging clothes, lamps, garden tools, etc.) takes the most time — boxing it up or moving it yourself can save a real chunk of money.',
+        id:'c', label:'(Original) Fine-print INSIDE the quote box',
+        copy:'Biggest factor in estimate accuracy? How prepared you are. Small stuff (clothes, lamps, knick-knacks) eats the most time — box it up or move it yourself to keep the bill tight.',
         apply:(root,copy)=>{
-          const cta = root.querySelector('.cta');
-          if(!cta) return;
-          const block = mkInj(`<div class="pro-tip"><span class="label">💡 Pro tip to save time + $</span>${escapeHtml(copy)}</div>`);
-          cta.parentNode.insertBefore(block, cta);
+          const note = root.querySelector('.qbox .qnote');
+          if(!note) return;
+          note.classList.add('x-injected');
+          note.innerHTML = `<span style="font-weight:600;color:#7a5519">💡 </span>${escapeHtml(copy)}`;
         }
       }
     ]
@@ -1241,8 +1251,8 @@ const SUGGESTIONS = [
         }
       },
       {
-        id:'b', label:'Tighter (arrow CTA)',
-        copy:'🚀 Make the smart move →',
+        id:'b', label:'Tighter (no false-affordance arrow)',
+        copy:'🚀 Make the smart move',
         apply:(root,copy)=>{
           const h = root.querySelector('.cta h3');
           if(!h) return;
@@ -1311,36 +1321,180 @@ const SUGGESTIONS = [
   {
     id: 'sb7-success',
     title: 'SB7 · Success-vision close (paint life after the move)',
-    why: 'StoryBrand "success" tenet: people buy resolutions, not transactions. The email currently ends at "your date is locked." Add the picture of life after the move — that\'s what customers are actually buying.',
+    why: 'StoryBrand "success" tenet: people buy resolutions, not transactions. Now lands BEFORE the CTA box (not after) so the vision motivates the action — paint the future state while they\'re deciding, not after they\'ve been asked.',
     variants: [
       {
         id:'a', label:'Transformation language (frazzled → fresh start)',
         copy:'By Saturday night, you\'ll be eating takeout in your new living room — frazzled traded for fresh start.',
         apply:(root,copy)=>{
-          const sign = root.querySelector('[data-anchor="signoff"]');
-          if(!sign) return;
+          // Insert immediately BEFORE the CTA box (motivates the action that follows)
+          const cta = root.querySelector('.cta');
+          if(!cta) return;
           const block = mkInj(`<div class="sb-success">${escapeHtml(copy)}</div>`);
-          sign.parentNode.insertBefore(block, sign);
+          cta.parentNode.insertBefore(block, cta);
         }
       },
       {
         id:'b', label:'Teleportation metaphor (from brand doc)',
         copy:'Honestly? We\'d teleport your stuff if we could. This is the closest we can get — and it\'s pretty close.',
         apply:(root,copy)=>{
-          const sign = root.querySelector('[data-anchor="signoff"]');
-          if(!sign) return;
+          const cta = root.querySelector('.cta');
+          if(!cta) return;
           const block = mkInj(`<div class="sb-success">${escapeHtml(copy)}</div>`);
-          sign.parentNode.insertBefore(block, sign);
+          cta.parentNode.insertBefore(block, cta);
         }
       },
       {
         id:'c', label:'Tagline-style close',
         copy:'Start your new chapter on the right foot. That\'s the smart move.',
         apply:(root,copy)=>{
-          const sign = root.querySelector('[data-anchor="signoff"]');
-          if(!sign) return;
+          const cta = root.querySelector('.cta');
+          if(!cta) return;
           const block = mkInj(`<div class="sb-success"><em>${escapeHtml(copy)}</em></div>`);
-          sign.parentNode.insertBefore(block, sign);
+          cta.parentNode.insertBefore(block, cta);
+        }
+      }
+    ]
+  },
+  /* ---------- Conversion polish batch (5/27) — copywriter + conversion-specialist final pass ---------- */
+  {
+    id: 'cp1-phone-cta',
+    title: 'CP1 · Add phone-call alternative inside the CTA (conversion lift)',
+    why: 'Reply-by-email is the only path forward right now. Customers with high anxiety or complex moves want to hear a human voice before committing 5 reply items in writing. Adding a one-line phone alternative captures those customers who would otherwise sit on the email for days.',
+    variants: [
+      {
+        id:'a', label:'Inline one-liner inside CTA box (under reply list)',
+        copy:'Prefer to talk it through? Call {phone} and we\'ll do this in 3 minutes on the phone.',
+        apply:(root,copy)=>{
+          const cta = root.querySelector('.cta');
+          if(!cta) return;
+          // Insert after the reply <ol>, before the final paragraph
+          const ol = cta.querySelector('ol');
+          if(!ol) return;
+          const block = mkInj(`<p style="font-size:15px;margin-top:14px;padding-top:12px;border-top:1px dashed #b8d4e8"><b style="color:var(--info)">📞 Prefer to talk it through?</b> Call {phone} and we'll knock this out in 3 minutes on the phone.</p>`);
+          ol.parentNode.insertBefore(block, ol.nextSibling);
+        }
+      },
+      {
+        id:'b', label:'Standalone callout BELOW CTA box (more prominent)',
+        copy:'Prefer to talk? Call {phone} and we\'ll knock this out in 3 minutes.',
+        apply:(root,copy)=>{
+          const cta = root.querySelector('.cta');
+          if(!cta) return;
+          const block = mkInj(`<div style="background:var(--info-bg);border:1px solid #b8d4e8;border-radius:6px;padding:12px 14px;margin:10px 0;font-size:15px"><b style="color:var(--info)">📞 Prefer to talk?</b> Call {phone} and we'll knock this out in 3 minutes.</div>`);
+          cta.parentNode.insertBefore(block, cta.nextSibling);
+        }
+      }
+    ]
+  },
+  {
+    id: 'cp2-grid-preframe',
+    title: 'CP2 · One-line pre-frame above the included/won\'t-see grid',
+    why: 'The two-column grid is a feature dump without context. A single sentence above it primes the reader to process it as a comparison — comparisons convert faster than feature lists.',
+    variants: [
+      {
+        id:'a', label:'Direct comparison framing',
+        copy:'Here\'s what\'s already in your rate vs. what other movers tack on:',
+        apply:(root,copy)=>{
+          const pair = root.querySelector('.pair');
+          if(!pair) return;
+          const line = mkInj(`<p style="font-size:15px;font-weight:600;margin:12px 0 4px;color:var(--ink)">${escapeHtml(copy)}</p>`);
+          pair.parentNode.insertBefore(line, pair);
+        }
+      },
+      {
+        id:'b', label:'Slightly warmer',
+        copy:'Two columns to compare us with anyone else you\'re looking at:',
+        apply:(root,copy)=>{
+          const pair = root.querySelector('.pair');
+          if(!pair) return;
+          const line = mkInj(`<p style="font-size:15px;font-weight:600;margin:12px 0 4px;color:var(--ink)">${escapeHtml(copy)}</p>`);
+          pair.parentNode.insertBefore(line, pair);
+        }
+      },
+      {
+        id:'c', label:'Punchier / shorter',
+        copy:'What you get vs. what you don\'t pay for:',
+        apply:(root,copy)=>{
+          const pair = root.querySelector('.pair');
+          if(!pair) return;
+          const line = mkInj(`<p style="font-size:15px;font-weight:600;margin:12px 0 4px;color:var(--ink)">${escapeHtml(copy)}</p>`);
+          pair.parentNode.insertBefore(line, pair);
+        }
+      }
+    ]
+  },
+  {
+    id: 'cp3-tighten-estimate',
+    title: 'CP3 · Tighten the estimate paragraph before the drum roll',
+    why: 'Currently 4 sentences of preamble before the Quote Box, which then duplicates most of the same info visually. The "real estimate, not a lowball" line is gold — keep it. The rest is redundant once the box appears.',
+    variants: [
+      {
+        id:'a', label:'One sentence only',
+        copy:'Here\'s a real estimate — not a lowball to get you in the door. We bill in 15-minute increments after the 2.5-hour minimum, so you only pay for the time we actually use.',
+        apply:(root,copy)=>{
+          const p = root.querySelector('[data-anchor="estimate-context"]');
+          if(!p) return;
+          p.classList.add('x-injected');
+          p.innerHTML = escapeHtml(copy);
+        }
+      },
+      {
+        id:'b', label:'Tighter — drop the billing explainer too',
+        copy:'Here\'s a real estimate — not a lowball to get you in the door.',
+        apply:(root,copy)=>{
+          const p = root.querySelector('[data-anchor="estimate-context"]');
+          if(!p) return;
+          p.classList.add('x-injected');
+          p.innerHTML = escapeHtml(copy);
+        }
+      },
+      {
+        id:'c', label:'Keep the sales-rep flexibility cue',
+        copy:'A real estimate (not a lowball to get you in the door) based on what you shared. We bill in 15-minute increments after the 2.5-hour minimum.',
+        apply:(root,copy)=>{
+          const p = root.querySelector('[data-anchor="estimate-context"]');
+          if(!p) return;
+          p.classList.add('x-injected');
+          p.innerHTML = escapeHtml(copy);
+        }
+      }
+    ]
+  },
+  {
+    id: 'cp4-preheader',
+    title: 'CP4 · Preheader text for inbox preview (KP implementation note)',
+    why: 'Gmail/Apple Mail show the first ~120 chars of the email next to the subject line. Currently that\'s "Hi {name}, Thanks for thinking of us!" — generic. The preheader is conversion-critical real estate. This card doesn\'t modify the rendered email — it captures the preheader copy decision for KP to implement in EMMA.',
+    variants: [
+      {
+        id:'a', label:'Triple-hook (fees / movers / urgency)',
+        copy:'No hidden fees, real human movers, and your date isn\'t held yet — let\'s lock it in.',
+        apply:(root,copy)=>{
+          // Visualize in tool — show as "Preheader:" pseudo-line under subject bar
+          const subjectBar = root.querySelector('.subject-bar');
+          if(!subjectBar) return;
+          const ph = mkInj(`<div class="subject-bar" style="border-top:0;color:var(--ink-soft);font-size:12px;font-style:italic"><b>Preheader:</b> ${escapeHtml(copy)}</div>`);
+          subjectBar.parentNode.insertBefore(ph, subjectBar.nextSibling);
+        }
+      },
+      {
+        id:'b', label:'Urgency-led',
+        copy:'Your date isn\'t held yet — quick reply locks it in. (No hidden fees, promise.)',
+        apply:(root,copy)=>{
+          const subjectBar = root.querySelector('.subject-bar');
+          if(!subjectBar) return;
+          const ph = mkInj(`<div class="subject-bar" style="border-top:0;color:var(--ink-soft);font-size:12px;font-style:italic"><b>Preheader:</b> ${escapeHtml(copy)}</div>`);
+          subjectBar.parentNode.insertBefore(ph, subjectBar.nextSibling);
+        }
+      },
+      {
+        id:'c', label:'Brand-voice (suckless framing)',
+        copy:'Moving doesn\'t have to suck. Here\'s what your move would actually cost and what\'s included.',
+        apply:(root,copy)=>{
+          const subjectBar = root.querySelector('.subject-bar');
+          if(!subjectBar) return;
+          const ph = mkInj(`<div class="subject-bar" style="border-top:0;color:var(--ink-soft);font-size:12px;font-style:italic"><b>Preheader:</b> ${escapeHtml(copy)}</div>`);
+          subjectBar.parentNode.insertBefore(ph, subjectBar.nextSibling);
         }
       }
     ]
