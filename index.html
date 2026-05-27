@@ -347,7 +347,7 @@
       </div>
     </div>
     <div class="legend">
-      <b>How it works:</b> Each suggestion has 1+ variants (radio-pick) plus an "Other" custom textarea. Click <b>👁 Preview in email</b> to see that variant rendered live in the email (orange dashed outline). Click <b>✓ Approve</b> to lock it into the running final version (green checkmark badge). Approved changes stack — the email evolves as you go. Export when done.
+      <b>You're viewing Cameron's finished review (5/27/26) — 18 changes baked into the email.</b> Switch to the <b>Approved</b> or <b>Rejected</b> tabs on the right to see every decision. Want to override anything? Pick a different variant or hit reject on any card — your changes save to your browser only and won't affect Cameron's version.
     </div>
     <div class="pane-body">
 
@@ -593,11 +593,58 @@ const state = {
   sugFilter: 'pending' // pending | approved | rejected | all
 };
 
+/* Cameron's final review decisions as of 5/27/2026 — seeded for any first-time visitor
+   so KP / Amanda / anyone with the link sees the finished email by default.
+   Local browser overrides this on subsequent visits via localStorage. */
+const CAMERON_DECISIONS = {
+  's1-best-of':           {status:'approved', selectedVariant:'a'},
+  's2-savings':           {status:'approved', selectedVariant:'c'},
+  's3-drumroll':          {status:'approved', selectedVariant:'a'},
+  's4-big-honking':       {status:'approved', selectedVariant:'b'},
+  's5-human':             {status:'approved', selectedVariant:'b'},
+  's6-voice-list':        {status:'approved', selectedVariant:'a'},
+  's7-pps':               {status:'approved', selectedVariant:'a'},
+  's8-disarming':         {status:'rejected', selectedVariant:'a'},
+  's9-escape-hatch':      {status:'rejected', selectedVariant:'b'},
+  's10-strangers':        {status:'approved', selectedVariant:'a'},
+  's11-snakes':           {status:'approved', selectedVariant:'b'},
+  's12-protip':           {status:'approved', selectedVariant:'b'},
+  's13-subject':          {status:'approved', selectedVariant:'a'},
+  's14-waaay-coverage':   {status:'rejected', selectedVariant:'b'},
+  'sb1-tagline':          {status:'approved', selectedVariant:'a'},
+  'sb2-empathy':          {status:'rejected', selectedVariant:'a'},
+  'sb3-smart-move-brand': {status:'approved', selectedVariant:'c'},
+  'sb4-hero-trust':       {status:'rejected', selectedVariant:'a'},
+  'sb5-smart-cta':        {status:'approved', selectedVariant:'b'},
+  'sb6-plan':             {status:'rejected', selectedVariant:'b'},
+  'sb7-success':          {status:'approved', selectedVariant:'b'},
+  'cp1-phone-cta':        {status:'approved', selectedVariant:'a'},
+  'cp2-grid-preframe':    {status:'rejected', selectedVariant:'c'},
+  'cp3-tighten-estimate': {status:'rejected', selectedVariant:'b'},
+  'cp4-preheader':        {status:'approved', selectedVariant:'c'},
+  's15-yay-confirm':      {status:'approved', selectedVariant:'b'},
+};
+
 function load(){
   try{
     const raw = localStorage.getItem(STORAGE);
     if(raw){ Object.assign(state, JSON.parse(raw)); }
   }catch(e){}
+  // First-time visitor (no localStorage): seed Cameron's finished review so the
+  // shared link opens on the polished Final email instead of the bare KP draft.
+  if(Object.keys(state.suggestions).length === 0){
+    Object.entries(CAMERON_DECISIONS).forEach(([id, dec]) => {
+      state.suggestions[id] = {
+        status: dec.status,
+        selectedVariant: dec.selectedVariant,
+        customCopy: '',
+        notes: '',
+        previewing: false
+      };
+    });
+    state.view = 'final';
+    state.sugFilter = 'approved';
+  }
 }
 function save(){
   localStorage.setItem(STORAGE, JSON.stringify(state));
