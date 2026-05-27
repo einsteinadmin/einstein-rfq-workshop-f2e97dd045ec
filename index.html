@@ -1058,44 +1058,38 @@ const SUGGESTIONS = [
   /* ---------- StoryBrand audit batch (5/26) — grounded in Cameron's Brand Story doc + Story Brand Outline ---------- */
   {
     id: 'sb1-tagline',
-    title: 'SB1 · "Moving doesn\'t have to suck" tagline under logo',
-    why: 'Your headline tagline from the Brand Story doc. Currently invisible in the email. Lands as a single italic line under the logo (and below the Best of Austin trophy chip if approved).',
+    title: 'SB1 · "Moving doesn\'t have to suck" tagline-led signoff',
+    why: 'Your headline tagline from the Brand Story doc, baked into the signoff as a warm closing line. Replaces the generic "Looking forward to moving you," prelude.',
     variants: [
       {
-        id:'a', label:'Original tagline (verbatim brand doc)',
-        copy:'Moving doesn\'t have to suck.',
+        id:'a', label:'Cameron\'s walk-through phrasing (5/27)',
+        copy:'Remember — moving doesn\'t have to suck. We look forward to making yours easy and fun!',
         apply:(root,copy)=>{
-          const logo = root.querySelector('img.logo');
-          if(!logo) return;
-          // Insert after trophy chip if it exists, otherwise after logo
-          const trophy = root.querySelector('.best-of-chip');
-          const ref = trophy || logo;
-          const line = mkInj(`<div class="sb-tagline">${escapeHtml(copy)}</div>`);
-          ref.parentNode.insertBefore(line, ref.nextSibling);
+          const sign = root.querySelector('[data-anchor="signoff"]');
+          if(!sign) return;
+          sign.classList.add('x-injected');
+          // Replace the "Looking forward to moving you," prelude with the tagline-led closing
+          sign.innerHTML = sign.innerHTML.replace(/Looking forward to moving you,?/i, escapeHtml(copy));
         }
       },
       {
-        id:'b', label:'Tightened — adds promise',
-        copy:'Moving doesn\'t have to suck. We make sure of it.',
+        id:'b', label:'Tighter — single beat',
+        copy:'Remember — moving doesn\'t have to suck. Looking forward to making yours easy.',
         apply:(root,copy)=>{
-          const logo = root.querySelector('img.logo');
-          if(!logo) return;
-          const trophy = root.querySelector('.best-of-chip');
-          const ref = trophy || logo;
-          const line = mkInj(`<div class="sb-tagline">${escapeHtml(copy)}</div>`);
-          ref.parentNode.insertBefore(line, ref.nextSibling);
+          const sign = root.querySelector('[data-anchor="signoff"]');
+          if(!sign) return;
+          sign.classList.add('x-injected');
+          sign.innerHTML = sign.innerHTML.replace(/Looking forward to moving you,?/i, escapeHtml(copy));
         }
       },
       {
         id:'c', label:'Smart Move System reframe',
-        copy:'Moving doesn\'t have to suck — that\'s why we built the Smart Move System.',
+        copy:'That\'s the Smart Move System at work — looking forward to making your move easy and fun!',
         apply:(root,copy)=>{
-          const logo = root.querySelector('img.logo');
-          if(!logo) return;
-          const trophy = root.querySelector('.best-of-chip');
-          const ref = trophy || logo;
-          const line = mkInj(`<div class="sb-tagline">${escapeHtml(copy)}</div>`);
-          ref.parentNode.insertBefore(line, ref.nextSibling);
+          const sign = root.querySelector('[data-anchor="signoff"]');
+          if(!sign) return;
+          sign.classList.add('x-injected');
+          sign.innerHTML = sign.innerHTML.replace(/Looking forward to moving you,?/i, escapeHtml(copy));
         }
       }
     ]
@@ -1167,16 +1161,23 @@ const SUGGESTIONS = [
         }
       },
       {
-        id:'c', label:'Pillar tags on existing sections',
+        id:'c', label:'Rename Quote Summary heading only (Cameron + KP 5/27)',
+        copy:'📋 Your Smart Move Quote',
+        apply:(root,copy)=>{
+          const qhead = root.querySelector('.qbox .qhead');
+          if(!qhead) return;
+          qhead.classList.add('x-injected');
+          qhead.innerHTML = escapeHtml(copy);
+        }
+      },
+      {
+        id:'d', label:'(Old behavior) Pillar tags on 3 sections',
         copy:'(applies pillar labels: Smart Pricing on included grid, Smart Results on trust block, Smart Scheduling on CTA)',
         apply:(root,copy)=>{
-          // Tag the "What\'s included" h4
           const inc = root.querySelector('.pair .col.good h4');
           if(inc){ inc.classList.add('x-injected'); inc.innerHTML = '✅ Smart Pricing — what\'s included:'; }
-          // Tag the "What you won\'t see" h4
           const wont = root.querySelector('.pair .col.bad h4');
           if(wont){ wont.classList.add('x-injected'); wont.innerHTML = '🚫 Smart Pricing — what you won\'t see:'; }
-          // Tag the trust heading
           const trust = root.querySelector('[data-anchor="trust-heading"]');
           if(trust){ trust.classList.add('x-injected'); trust.innerHTML = 'Smart Results — why people trust us with their stuff:'; }
         }
