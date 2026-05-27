@@ -895,32 +895,27 @@ const SUGGESTIONS = [
   {
     id: 's10-strangers',
     title: '"Strangers touching your stuff" Meet Your Movers line',
-    why: 'Names the real underlying anxiety in the customer\'s own language, then defuses it. THE line — customers screenshot it. Now lands ABOVE the trust block so empathy precedes authority (StoryBrand guide-tenet ordering).',
+    why: 'Names the real underlying anxiety in the customer\'s own language, then defuses it. THE line — customers screenshot it. Lands BELOW the trust block, ABOVE the CTA (Cameron\'s preferred placement).',
     variants: [
       {
         id:'a', label:'Original phrasing (callout block)',
         copy:'A few days before your move, you\'ll get a "Meet Your Movers" email so you know exactly who\'s coming. No strangers touching your stuff.',
         apply:(root,copy)=>{
-          // Place ABOVE the trust block heading — empathy before authority
-          const trust = root.querySelector('[data-anchor="trust-heading"]');
-          if(!trust) return;
-          // hr divider sits just above trust heading — insert before that
-          const hr = trust.previousElementSibling;
-          const ref = (hr && hr.tagName === 'HR') ? hr : trust;
+          // Place BELOW the trust block, immediately above the CTA box (Cameron preference)
+          const cta = root.querySelector('.cta');
+          if(!cta) return;
           const block = mkInj(`<div class="strangers-block">👋 ${escapeHtml(copy)}</div>`);
-          ref.parentNode.insertBefore(block, ref);
+          cta.parentNode.insertBefore(block, cta);
         }
       },
       {
         id:'b', label:'Inline italic (less visual weight)',
         copy:'A few days before your move you\'ll get a Meet Your Movers email so you know exactly who\'s pulling up. No strangers touching your stuff.',
         apply:(root,copy)=>{
-          const trust = root.querySelector('[data-anchor="trust-heading"]');
-          if(!trust) return;
-          const hr = trust.previousElementSibling;
-          const ref = (hr && hr.tagName === 'HR') ? hr : trust;
+          const cta = root.querySelector('.cta');
+          if(!cta) return;
           const block = mkInj(`<p style="font-size:14px;font-style:italic;color:var(--ink-soft);margin:14px 0">${escapeHtml(copy)}</p>`);
-          ref.parentNode.insertBefore(block, ref);
+          cta.parentNode.insertBefore(block, cta);
         }
       }
     ]
@@ -985,15 +980,13 @@ const SUGGESTIONS = [
         }
       },
       {
-        id:'b', label:'Shorter (same spot)',
+        id:'b', label:'Shorter — INSIDE quote box (Cameron preference)',
         copy:'Biggest factor in estimate accuracy? How prepared you are. Small stuff (clothes, lamps, knick-knacks) eats the most time — box it up or move it yourself to keep the bill tight.',
         apply:(root,copy)=>{
           const note = root.querySelector('.qbox .qnote');
-          if(note) note.remove();
-          const qbox = root.querySelector('.qbox');
-          if(!qbox) return;
-          const block = mkInj(`<div class="pro-tip"><span class="label">💡 Pro tip to save time + $</span>${escapeHtml(copy)}</div>`);
-          qbox.parentNode.insertBefore(block, qbox.nextSibling);
+          if(!note) return;
+          note.classList.add('x-injected');
+          note.innerHTML = `<span style="font-weight:600;color:#7a5519">💡 </span>${escapeHtml(copy)}`;
         }
       },
       {
@@ -1251,8 +1244,8 @@ const SUGGESTIONS = [
         }
       },
       {
-        id:'b', label:'Tighter (no false-affordance arrow)',
-        copy:'🚀 Make the smart move',
+        id:'b', label:'Question framing (Cameron 5/27)',
+        copy:'🚀 Ready to make the smart move?',
         apply:(root,copy)=>{
           const h = root.querySelector('.cta h3');
           if(!h) return;
