@@ -763,15 +763,19 @@ const SUGGESTIONS = [
         }
       },
       {
-        id:'b', label:'Signoff + Meet Your Movers tease above',
+        id:'b', label:'Signoff + Meet Your Movers tease above (auto-dedupes if card #10 approved)',
         copy:'Looking forward to moving you,\n{first_name} from the {branch} team\nEinstein Moving Company\n{phone}',
         apply:(root,copy)=>{
           const sign = root.querySelector('[data-anchor="signoff"]');
           if(!sign) return;
-          sign.parentNode.insertBefore(
-            mkInj(`<div class="meet-tease">A few days before your move, we'll send a Meet Your Movers email so you know exactly who's pulling up to your house.</div>`),
-            sign
-          );
+          // Skip the tease if s10-strangers is also approved — it lives above the CTA there
+          const strangersApproved = state.suggestions['s10-strangers']?.status === 'approved';
+          if(!strangersApproved){
+            sign.parentNode.insertBefore(
+              mkInj(`<div class="meet-tease">A few days before your move, we'll send a Meet Your Movers email so you know exactly who's pulling up to your house.</div>`),
+              sign
+            );
+          }
           sign.classList.add('x-injected');
           sign.innerHTML = escapeHtml(copy).replace(/\n/g,'<br>');
         }
