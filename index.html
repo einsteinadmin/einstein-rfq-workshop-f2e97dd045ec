@@ -626,13 +626,20 @@ const CAMERON_DECISIONS = {
 };
 
 function load(){
+  let hadStoredState = false;
   try{
     const raw = localStorage.getItem(STORAGE);
-    if(raw){ Object.assign(state, JSON.parse(raw)); }
+    if(raw){
+      Object.assign(state, JSON.parse(raw));
+      hadStoredState = true;
+    }
   }catch(e){}
   // First-time visitor (no localStorage): seed Cameron's finished review so the
   // shared link opens on the polished Final email instead of the bare KP draft.
-  if(Object.keys(state.suggestions).length === 0){
+  // NOTE: state.suggestions may already be populated by the parse-time
+  // SUGGESTIONS.forEach default-variant loop, so we can't check on emptiness.
+  // Instead we check the stored-state flag.
+  if(!hadStoredState){
     Object.entries(CAMERON_DECISIONS).forEach(([id, dec]) => {
       state.suggestions[id] = {
         status: dec.status,
